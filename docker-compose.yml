@@ -36,7 +36,7 @@ services:
       SECRET_KEY: dev-secret-key-change-in-production
       ENCRYPTION_KEY: ""
       ENVIRONMENT: development
-      CORS_ORIGINS: '["http://localhost:5173"]'
+      CORS_ORIGINS: '["http://localhost:5173", "http://localhost:3000"]'
     depends_on:
       postgres:
         condition: service_healthy
@@ -74,18 +74,6 @@ services:
         condition: service_healthy
     volumes:
       - ./backend:/code
-    working_dir: /code
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    command: npm run dev -- --host 0.0.0.0 --port 5173
-    ports:
-      - "5173:5173"
-    volumes:
-      - ./frontend:/code
-      - /code/node_modules
     working_dir: /code
 
 volumes:
