@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-background: #fafafa;
+    --color-foreground: #0a0a0a;
+    --color-border: #e5e7eb;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: "Inter", "Geist Sans", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+}
