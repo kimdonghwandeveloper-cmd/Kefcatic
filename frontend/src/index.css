@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Kefcatic Design Tokens — CSS Custom Properties */
+:root {
+  /* Colors */
+  --color-black: #0a0a0a;
+  --color-white: #fafafa;
+  --color-gray-50: #f5f5f5;
+  --color-gray-100: #e8e8e8;
+  --color-gray-200: #d1d1d1;
+  --color-gray-400: #9a9a9a;
+  --color-gray-600: #5c5c5c;
+  --color-gray-800: #2a2a2a;
+  --color-gray-950: #111111;
+
+  /* Status tokens */
+  --status-active-bg: #0a0a0a;
+  --status-active-text: #fafafa;
+  --status-idle-text: #9a9a9a;
+  --status-review-border: #0a0a0a;
+  --status-error-text: #0a0a0a;
+
+  /* Elevation (border + bg, no colored shadows) */
+  --layer-0-bg: #f5f5f5;
+  --layer-1-bg: #ffffff;
+  --layer-1-border: 1px solid #e8e8e8;
+  --layer-2-bg: #ffffff;
+  --layer-2-border: 1px solid #d1d1d1;
+  --layer-2-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+/* Base resets */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--layer-0-bg);
+  color: var(--color-black);
+  font-family: "Pretendard", "Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Cat state animations — CSS only, no external libraries */
+@keyframes tail-wag {
+  0%, 100% { transform: rotate(-8deg); }
+  50% { transform: rotate(8deg); }
+}
+
+@keyframes blink {
+  0%, 90%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.1); }
+}
+
+@keyframes head-sway {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+
+@keyframes fast-move {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  75% { transform: translateX(3px); }
+}
+
+@keyframes carry-sway {
+  0%, 100% { transform: rotate(-5deg); }
+  50% { transform: rotate(5deg); }
+}
+
+@keyframes ear-flat {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-15deg); }
+}
+
+.cat-idle .cat-tail { animation: tail-wag 2s ease-in-out infinite; }
+.cat-watching .cat-eyes { animation: blink 4s ease-in-out infinite; }
+.cat-reading .cat-head { animation: head-sway 1.5s ease-in-out infinite; }
+.cat-executing .cat-body { animation: fast-move 0.5s ease-in-out infinite; }
+.cat-waiting_approval .cat-item { animation: carry-sway 1s ease-in-out infinite; }
+.cat-error .cat-ears { animation: ear-flat 2s ease-in-out infinite; }
