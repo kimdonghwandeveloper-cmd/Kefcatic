@@ -1,18 +1,19 @@
 """
-Celery tasks for assistant execution.
+Celery tasks for assistant execution pipeline.
 
-SR-05: All tasks must use get_async_session() context manager.
-       Never create DB sessions directly.
+SR-05: All async DB work uses get_async_session() context manager.
+       Never create DB sessions directly; always wrap in try/finally.
 """
 import asyncio
 import uuid
 from datetime import UTC, datetime
 
+from croniter import croniter
+
 from app.tasks.celery_app import celery_app
 
 
-def _run_async(coro):
-    """Run an async coroutine from a sync Celery task."""
+def _run(coro):
     loop = asyncio.new_event_loop()
     try:
         return loop.run_until_complete(coro)
@@ -20,15 +21,12 @@ def _run_async(coro):
         loop.close()
 
 
+# ── Beat dispatcher ───────────────────────────────────────────────────────────
+
 @celery_app.task(name="app.tasks.assistant_tasks.celerybeat_dispatch")
 def celerybeat_dispatch() -> None:
-    """DB-scan beat dispatcher.
-
-    Queries triggers where is_active=True and next_run_at <= now,
-    fires run_assistant_task for each, then updates next_run_at.
-    Implemented in Phase 1 once the full model layer is wired up.
-    """
-    _run_async(_celerybeat_dispatch_async())
+    """DB-scan beat: queries triggers table every 60 s and fires due tasks."""
+    _run(_celerybeat_dispatch_async())
 
 
 async def _celerybeat_dispatch_async() -> None:
@@ -38,22 +36,29 @@ async def _celerybeat_dispatch_async() -> None:
     from app.models.trigger import Trigger
 
     now = datetime.now(UTC)
-    async with get_async_session() as session:  # type: ignore[attr-defined]
-        result = await session.execute(
-            select(Trigger).where(
-                Trigger.is_active.is_(True),
-                Trigger.next_run_at <= now,
+    async with get_async_session() as session:
+        try:
+            result = await session.execute(
+                select(Trigger).where(
+                    Trigger.is_active.is_(True),
+                    Trigger.next_run_at <= now,
+                )
             )
-        )
-        triggers = result.scalars().all()
-        for trigger in triggers:
-            run_assistant_task.delay(
-                str(trigger.assistant_id), str(trigger.id)
-            )
-            # next_run_at will be recalculated in Phase 1 using croniter
-            trigger.next_run_at = None
-        await session.commit()
+            triggers = result.scalars().all()
+            for trigger in triggers:
+                run_assistant_task.delay(str(trigger.assistant_id), str(trigger.id))
+                # Advance next_run_at using croniter
+                if trigger.cron_expression:
+                    cron = croniter(trigger.cron_expression, now)
+                    trigger.next_run_at = cron.get_next(datetime)
+                else:
+                    trigger.next_run_at = None
+        except Exception:
+            await session.rollback()
+            raise
 
+
+# ── Assistant execution entry point ──────────────────────────────────────────
 
 @celery_app.task(
     name="app.tasks.assistant_tasks.run_assistant_task",
@@ -61,13 +66,189 @@ async def _celerybeat_dispatch_async() -> None:
     max_retries=3,
     default_retry_delay=60,
 )
-def run_assistant_task(self, assistant_id: str, trigger_id: str | None = None) -> None:
-    """Entry point for assistant execution. Full implementation in Phase 1."""
-    _run_async(_run_assistant_task_async(assistant_id, trigger_id))
+def run_assistant_task(
+    self, assistant_id: str, trigger_id: str | None = None
+) -> None:
+    try:
+        _run(_run_assistant_task_async(uuid.UUID(assistant_id), trigger_id))
+    except Exception as exc:
+        raise self.retry(exc=exc)
 
 
 async def _run_assistant_task_async(
-    assistant_id: str, trigger_id: str | None
+    assistant_id: uuid.UUID, trigger_id: str | None
 ) -> None:
-    # Phase 1: implement full pipeline here
-    pass
+    from sqlalchemy import select
+
+    from app.core.database import get_async_session
+    from app.models.assistant import Assistant
+    from app.models.task import TaskRun
+
+    async with get_async_session() as session:
+        try:
+            assistant = await session.get(Assistant, assistant_id)
+            if not assistant or not assistant.is_active:
+                return
+
+            task_run = TaskRun(
+                assistant_id=assistant_id,
+                trigger_id=uuid.UUID(trigger_id) if trigger_id else None,
+                status="running",
+                started_at=datetime.now(UTC),
+            )
+            session.add(task_run)
+            await session.flush()
+
+            await _run_pipeline(session, assistant, task_run)
+
+            task_run.status = "completed"
+            task_run.completed_at = datetime.now(UTC)
+        except Exception as exc:
+            if "task_run" in dir():
+                task_run.status = "failed"
+                task_run.error_message = str(exc)
+                task_run.completed_at = datetime.now(UTC)
+            await session.rollback()
+            raise
+
+
+async def _run_pipeline(session, assistant, task_run) -> None:
+    """Full execution pipeline: fetch → classify → draft → gate.
+
+    Phase 1 implements YouTube comment processing.
+    Other role_types will be added in Phase 3.
+    """
+    if assistant.role_type != "youtube_moderator":
+        return
+
+    await _youtube_pipeline(session, assistant, task_run)
+
+
+async def _youtube_pipeline(session, assistant, task_run) -> None:
+    from sqlalchemy import select
+
+    from app.models.connector import AssistantConnector
+    from app.services.action_engine import execute_action
+    from app.services.connector_credential_service import ConnectorCredentialService
+    from app.services.llm_service import LLMService
+    from app.connectors.youtube import YouTubeConnector
+
+    # Fetch the YouTube credential attached to this assistant
+    result = await session.execute(
+        select(AssistantConnector).where(
+            AssistantConnector.assistant_id == assistant.id,
+            AssistantConnector.connector_type == "youtube",
+        )
+    )
+    ac = result.scalar_one_or_none()
+    if not ac:
+        return
+
+    cred_service = ConnectorCredentialService(session)
+    credentials = await cred_service.get_decrypted(ac.credential_id)
+
+    connector = YouTubeConnector(credentials=credentials, config=dict(ac.config or {}))
+    items = await connector.list_items(max_results=50)
+
+    llm = LLMService()
+    categories = ["spam", "question", "positive", "negative", "other"]
+
+    for item in items:
+        classification = await llm.classify_comment(item.content, categories)
+
+        if classification.category == "spam":
+            await execute_action(
+                session,
+                task_run_id=task_run.id,
+                action_type="youtube.comment.hide",
+                assistant_id=assistant.id,
+                input_data={"comment_id": item.id},
+            )
+        elif classification.category == "question":
+            draft = await llm.generate_reply_draft(
+                item.content,
+                assistant_system_prompt=assistant.system_prompt or "",
+            )
+            await execute_action(
+                session,
+                task_run_id=task_run.id,
+                action_type="youtube.comment.reply",
+                assistant_id=assistant.id,
+                input_data={"comment_id": item.id, "text": draft.text},
+            )
+
+    task_run.result_summary = {
+        "total": len(items),
+        "categories": categories,
+    }
+
+
+# ── Post-approval execution ───────────────────────────────────────────────────
+
+@celery_app.task(
+    name="app.tasks.assistant_tasks.execute_approved_action",
+    bind=True,
+    max_retries=3,
+    default_retry_delay=30,
+)
+def execute_approved_action(self, action_log_id: str) -> None:
+    try:
+        _run(_execute_approved_action_async(uuid.UUID(action_log_id)))
+    except Exception as exc:
+        raise self.retry(exc=exc)
+
+
+async def _execute_approved_action_async(action_log_id: uuid.UUID) -> None:
+    from datetime import UTC, datetime
+
+    from app.core.database import get_async_session
+    from app.models.action import ActionLog
+    from app.models.assistant import Assistant
+    from app.models.connector import AssistantConnector
+    from app.models.task import TaskRun
+    from app.services.action_engine import ACTION_REGISTRY
+    from app.services.connector_credential_service import ConnectorCredentialService
+    from app.connectors.youtube import YouTubeConnector
+
+    async with get_async_session() as session:
+        try:
+            action_log = await session.get(ActionLog, action_log_id)
+            if not action_log or action_log.status != "approved":
+                return
+
+            task_run = await session.get(TaskRun, action_log.task_run_id)
+            assistant = await session.get(Assistant, task_run.assistant_id)
+
+            result = await session.execute(
+                __import__("sqlalchemy", fromlist=["select"]).select(AssistantConnector).where(
+                    AssistantConnector.assistant_id == assistant.id,
+                    AssistantConnector.connector_type == "youtube",
+                )
+            )
+            ac = result.scalar_one_or_none()
+            if not ac:
+                return
+
+            cred_service = ConnectorCredentialService(session)
+            credentials = await cred_service.get_decrypted(ac.credential_id)
+            connector = YouTubeConnector(credentials=credentials)
+
+            input_data = action_log.modified_input or action_log.input_data or {}
+
+            if action_log.action_type == "youtube.comment.reply":
+                item = await connector.create_item(input_data)
+                action_log.output_data = {"reply_id": item.id}
+                action_log.external_resource_id = item.id
+                action_log.rollback_data = {"reply_id": item.id}
+            elif action_log.action_type == "youtube.comment.hide":
+                success = await connector.delete_item(input_data["comment_id"])
+                action_log.output_data = {"success": success}
+                action_log.external_resource_id = input_data["comment_id"]
+
+            action_log.status = "executed"
+            action_log.executed_at = datetime.now(UTC)
+        except Exception:
+            if action_log:
+                action_log.status = "failed"
+            await session.rollback()
+            raise
