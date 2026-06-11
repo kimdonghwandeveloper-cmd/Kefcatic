@@ -3,21 +3,20 @@
 Credentials dict keys:
   access_token  — OAuth2 bearer token (decrypted by ConnectorCredentialService)
   refresh_token — OAuth2 refresh token
-  token_uri     — https://oauth2.googleapis.com/token
-  client_id     — Google OAuth client ID
-  client_secret — Google OAuth client secret
 """
 from typing import Any
-from urllib.parse import urlencode
 
 import httpx
 
 from app.connectors.base import BaseConnector, ConnectorItem, register_connector
+from app.connectors.oauth_helper import (
+    build_google_auth_url,
+    ensure_fresh_token,
+    exchange_google_code,
+)
 from app.core.config import settings
 
 _YOUTUBE_API = "https://www.googleapis.com/youtube/v3"
-_TOKEN_URI = "https://oauth2.googleapis.com/token"
-_AUTH_URI = "https://accounts.google.com/o/oauth2/v2/auth"
 
 _SCOPES = [
     "https://www.googleapis.com/auth/youtube.force-ssl",
@@ -25,63 +24,26 @@ _SCOPES = [
 
 
 def build_auth_url(state: str) -> str:
-    params = {
-        "client_id": settings.google_client_id,
-        "redirect_uri": settings.google_redirect_uri,
-        "response_type": "code",
-        "scope": " ".join(_SCOPES),
-        "access_type": "offline",
-        "prompt": "consent",
-        "state": state,
-    }
-    return f"{_AUTH_URI}?{urlencode(params)}"
+    return build_google_auth_url(_SCOPES, state, settings.google_redirect_uri)
 
 
 async def exchange_code(code: str) -> dict:
-    """Exchange an authorization code for access + refresh tokens."""
-    async with httpx.AsyncClient() as client:
-        resp = await client.post(
-            _TOKEN_URI,
-            data={
-                "code": code,
-                "client_id": settings.google_client_id,
-                "client_secret": settings.google_client_secret,
-                "redirect_uri": settings.google_redirect_uri,
-                "grant_type": "authorization_code",
-            },
-        )
-        resp.raise_for_status()
-        return resp.json()
-
-
-async def refresh_access_token(refresh_token: str) -> dict:
-    """Use the refresh token to obtain a new access token."""
-    async with httpx.AsyncClient() as client:
-        resp = await client.post(
-            _TOKEN_URI,
-            data={
-                "refresh_token": refresh_token,
-                "client_id": settings.google_client_id,
-                "client_secret": settings.google_client_secret,
-                "grant_type": "refresh_token",
-            },
-        )
-        resp.raise_for_status()
-        return resp.json()
+    return await exchange_google_code(code, settings.google_redirect_uri)
 
 
 @register_connector
 class YouTubeConnector(BaseConnector):
     connector_type = "youtube"
 
-    def _headers(self) -> dict[str, str]:
+    async def _fresh_headers(self) -> dict[str, str]:
+        self.credentials = await ensure_fresh_token(self.credentials)
         return {"Authorization": f"Bearer {self.credentials['access_token']}"}
 
     async def validate_credentials(self) -> bool:
         async with httpx.AsyncClient() as client:
             resp = await client.get(
                 f"{_YOUTUBE_API}/channels",
-                headers=self._headers(),
+                headers=await self._fresh_headers(),
                 params={"part": "id", "mine": "true"},
             )
             return resp.status_code == 200
@@ -109,7 +71,7 @@ class YouTubeConnector(BaseConnector):
         async with httpx.AsyncClient() as client:
             resp = await client.get(
                 f"{_YOUTUBE_API}/commentThreads",
-                headers=self._headers(),
+                headers=await self._fresh_headers(),
                 params=params,
             )
             resp.raise_for_status()
@@ -138,7 +100,7 @@ class YouTubeConnector(BaseConnector):
         async with httpx.AsyncClient() as client:
             resp = await client.get(
                 f"{_YOUTUBE_API}/commentThreads",
-                headers=self._headers(),
+                headers=await self._fresh_headers(),
                 params={"part": "snippet,replies", "id": item_id},
             )
             resp.raise_for_status()
@@ -176,7 +138,7 @@ class YouTubeConnector(BaseConnector):
         async with httpx.AsyncClient() as client:
             resp = await client.post(
                 f"{_YOUTUBE_API}/comments",
-                headers={**self._headers(), "Content-Type": "application/json"},
+                headers={**await self._fresh_headers(), "Content-Type": "application/json"},
                 params={"part": "snippet"},
                 json=body,
             )
@@ -201,7 +163,7 @@ class YouTubeConnector(BaseConnector):
         async with httpx.AsyncClient() as client:
             resp = await client.put(
                 f"{_YOUTUBE_API}/comments",
-                headers={**self._headers(), "Content-Type": "application/json"},
+                headers={**await self._fresh_headers(), "Content-Type": "application/json"},
                 params={"part": "snippet"},
                 json=body,
             )
@@ -221,7 +183,7 @@ class YouTubeConnector(BaseConnector):
         async with httpx.AsyncClient() as client:
             resp = await client.post(
                 f"{_YOUTUBE_API}/comments/setModerationStatus",
-                headers=self._headers(),
+                headers=await self._fresh_headers(),
                 params={
                     "id": item_id,
                     "moderationStatus": "rejected",
@@ -234,7 +196,7 @@ class YouTubeConnector(BaseConnector):
         async with httpx.AsyncClient() as client:
             resp = await client.get(
                 f"{_YOUTUBE_API}/channels",
-                headers=self._headers(),
+                headers=await self._fresh_headers(),
                 params={"part": "id", "mine": "true"},
             )
             resp.raise_for_status()

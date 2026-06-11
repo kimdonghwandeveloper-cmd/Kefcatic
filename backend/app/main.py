@@ -7,8 +7,10 @@ from app.api.audit import router as audit_router
 from app.api.auth import router as auth_router
 from app.api.connectors import router as connectors_router
 from app.api.health import router as health_router
+from app.api.memories import router as memories_router
 from app.api.stream import router as stream_router
 from app.api.tasks import router as tasks_router
+from app.api.templates import router as templates_router
 from app.core.config import settings
 
 app = FastAPI(
@@ -35,3 +37,5 @@ app.include_router(assistants_router, prefix="/api")
 app.include_router(approvals_router, prefix="/api")
 app.include_router(audit_router, prefix="/api")
 app.include_router(stream_router, prefix="/api")
+app.include_router(memories_router, prefix="/api")
+app.include_router(templates_router, prefix="/api")

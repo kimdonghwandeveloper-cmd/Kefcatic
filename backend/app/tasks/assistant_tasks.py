@@ -113,15 +113,11 @@ async def _run_assistant_task_async(
 
 
 async def _run_pipeline(session, assistant, task_run) -> None:
-    """Full execution pipeline: fetch → classify → draft → gate.
-
-    Phase 1 implements YouTube comment processing.
-    Other role_types will be added in Phase 3.
-    """
-    if assistant.role_type != "youtube_moderator":
-        return
-
-    await _youtube_pipeline(session, assistant, task_run)
+    """Full execution pipeline: fetch → classify → draft → gate."""
+    if assistant.role_type == "youtube_moderator":
+        await _youtube_pipeline(session, assistant, task_run)
+    elif assistant.role_type == "gmail_responder":
+        await _gmail_pipeline(session, assistant, task_run)
 
 
 async def _youtube_pipeline(session, assistant, task_run) -> None:
@@ -180,6 +176,79 @@ async def _youtube_pipeline(session, assistant, task_run) -> None:
     task_run.result_summary = {
         "total": len(items),
         "categories": categories,
+    }
+
+
+async def _gmail_pipeline(session, assistant, task_run) -> None:
+    """Gmail responder pipeline: fetch unread → classify → draft reply → gate."""
+    from sqlalchemy import select
+
+    from app.connectors.gmail import GmailConnector
+    from app.models.connector import AssistantConnector
+    from app.services.action_engine import execute_action
+    from app.services.connector_credential_service import ConnectorCredentialService
+    from app.services.llm_service import LLMService
+
+    result = await session.execute(
+        select(AssistantConnector).where(
+            AssistantConnector.assistant_id == assistant.id,
+            AssistantConnector.connector_type == "gmail",
+        )
+    )
+    ac = result.scalar_one_or_none()
+    if not ac:
+        return
+
+    cred_service = ConnectorCredentialService(session)
+    credentials = await cred_service.get_decrypted(ac.credential_id)
+
+    connector = GmailConnector(credentials=credentials, config=dict(ac.config or {}))
+    messages = await connector.list_items(max_results=20)
+
+    llm = LLMService()
+    categories = ["urgent", "question", "newsletter", "notification", "other"]
+
+    processed = 0
+    for msg in messages:
+        classification = await llm.classify_comment(msg.content, categories)
+
+        if classification.category in ("urgent", "question"):
+            draft = await llm.generate_reply_draft(
+                msg.content,
+                assistant_system_prompt=assistant.system_prompt or "",
+            )
+            meta = msg.metadata or {}
+            await execute_action(
+                session,
+                task_run_id=task_run.id,
+                action_type="gmail.draft.create",
+                assistant_id=assistant.id,
+                input_data={
+                    "thread_id": meta.get("thread_id", msg.id),
+                    "to": meta.get("from", ""),
+                    "subject": f"Re: {meta.get('subject', '')}",
+                    "body": draft.text,
+                },
+            )
+        elif classification.category in ("newsletter", "notification"):
+            # Auto-label as read (low-risk, auto mode)
+            await execute_action(
+                session,
+                task_run_id=task_run.id,
+                action_type="gmail.message.label",
+                assistant_id=assistant.id,
+                input_data={
+                    "message_id": msg.id,
+                    "add_labels": [],
+                    "remove_labels": ["UNREAD"],
+                },
+            )
+
+        processed += 1
+
+    task_run.result_summary = {
+        "total": len(messages),
+        "processed": processed,
     }
 
 
