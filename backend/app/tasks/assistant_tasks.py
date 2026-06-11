@@ -252,3 +252,74 @@ async def _execute_approved_action_async(action_log_id: uuid.UUID) -> None:
                 action_log.status = "failed"
             await session.rollback()
             raise
+
+
+# ── Rollback ──────────────────────────────────────────────────────────────────
+
+@celery_app.task(
+    name="app.tasks.assistant_tasks.rollback_action_task",
+    bind=True,
+    max_retries=2,
+    default_retry_delay=30,
+)
+def rollback_action_task(self, action_log_id: str) -> None:
+    try:
+        _run(_rollback_action_async(uuid.UUID(action_log_id)))
+    except Exception as exc:
+        raise self.retry(exc=exc)
+
+
+async def _rollback_action_async(action_log_id: uuid.UUID) -> None:
+    from app.core.database import get_async_session
+    from app.models.action import ActionLog
+    from app.models.assistant import Assistant
+    from app.models.connector import AssistantConnector
+    from app.models.task import TaskRun
+    from app.services.connector_credential_service import ConnectorCredentialService
+    from app.connectors.youtube import YouTubeConnector
+    from sqlalchemy import select
+
+    async with get_async_session() as session:
+        try:
+            action_log = await session.get(ActionLog, action_log_id)
+            # SR-02: never rollback without external_resource_id
+            if not action_log or not action_log.external_resource_id:
+                return
+
+            task_run = await session.get(TaskRun, action_log.task_run_id)
+            assistant = await session.get(Assistant, task_run.assistant_id)
+
+            result = await session.execute(
+                select(AssistantConnector).where(
+                    AssistantConnector.assistant_id == assistant.id,
+                    AssistantConnector.connector_type == "youtube",
+                )
+            )
+            ac = result.scalar_one_or_none()
+            if not ac:
+                return
+
+            cred_service = ConnectorCredentialService(session)
+            credentials = await cred_service.get_decrypted(ac.credential_id)
+            connector = YouTubeConnector(credentials=credentials)
+
+            if action_log.action_type == "youtube.comment.reply":
+                # Delete the reply that was posted
+                await connector.delete_item(action_log.external_resource_id)
+            elif action_log.action_type == "youtube.comment.hide":
+                # Restore comment (set back to published)
+                import httpx
+                async with httpx.AsyncClient() as client:
+                    await client.post(
+                        "https://www.googleapis.com/youtube/v3/comments/setModerationStatus",
+                        headers={"Authorization": f"Bearer {credentials['access_token']}"},
+                        params={
+                            "id": action_log.external_resource_id,
+                            "moderationStatus": "published",
+                        },
+                    )
+
+            action_log.status = "rolled_back"
+        except Exception:
+            await session.rollback()
+            raise
