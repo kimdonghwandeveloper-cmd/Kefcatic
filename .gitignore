@@ -2,6 +2,7 @@
 .env
 .env.local
 .env.*.local
+.env.prod
 
 # Python
 __pycache__/
@@ -18,21 +19,30 @@ build/
 venv/
 env/
 
-# pytest
+# pytest / coverage / type checkers
 .pytest_cache/
 .coverage
 htmlcov/
-
-# mypy
 .mypy_cache/
+.ruff_cache/
 
 # Node
 node_modules/
-dist/
+.next/
 .cache/
+
+# Vite build artifacts
+frontend/dist/
+frontend/tsconfig.tsbuildinfo
+frontend/tsconfig.node.tsbuildinfo
+frontend/vite.config.d.ts
+frontend/vite.config.js
+frontend/vitest.config.d.ts
+frontend/vitest.config.js
 
 # Docker
 .docker/
+postgres_data/
 
 # IDE
 .idea/
@@ -40,8 +50,10 @@ dist/
 *.swp
 *.swo
 
-# macOS
+# OS
 .DS_Store
+Thumbs.db
 
 # Alembic
-alembic/versions/*.pyc
+backend/alembic/versions/*.pyc
+celerybeat-schedule
