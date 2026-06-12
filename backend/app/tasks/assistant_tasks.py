@@ -32,11 +32,11 @@ def celerybeat_dispatch() -> None:
 async def _celerybeat_dispatch_async() -> None:
     from sqlalchemy import select
 
-    from app.core.database import get_async_session
+    from app.core.database import async_session_factory
     from app.models.trigger import Trigger
 
     now = datetime.now(UTC)
-    async with get_async_session() as session:
+    async with async_session_factory() as session:
         try:
             result = await session.execute(
                 select(Trigger).where(
@@ -80,11 +80,11 @@ async def _run_assistant_task_async(
 ) -> None:
     from sqlalchemy import select
 
-    from app.core.database import get_async_session
+    from app.core.database import async_session_factory
     from app.models.assistant import Assistant
     from app.models.task import TaskRun
 
-    async with get_async_session() as session:
+    async with async_session_factory() as session:
         try:
             assistant = await session.get(Assistant, assistant_id)
             if not assistant or not assistant.is_active:
@@ -270,7 +270,7 @@ def execute_approved_action(self, action_log_id: str) -> None:
 async def _execute_approved_action_async(action_log_id: uuid.UUID) -> None:
     from datetime import UTC, datetime
 
-    from app.core.database import get_async_session
+    from app.core.database import async_session_factory
     from app.models.action import ActionLog
     from app.models.assistant import Assistant
     from app.models.connector import AssistantConnector
@@ -279,7 +279,7 @@ async def _execute_approved_action_async(action_log_id: uuid.UUID) -> None:
     from app.services.connector_credential_service import ConnectorCredentialService
     from app.connectors.youtube import YouTubeConnector
 
-    async with get_async_session() as session:
+    async with async_session_factory() as session:
         try:
             action_log = await session.get(ActionLog, action_log_id)
             if not action_log or action_log.status != "approved":
@@ -339,7 +339,7 @@ def rollback_action_task(self, action_log_id: str) -> None:
 
 
 async def _rollback_action_async(action_log_id: uuid.UUID) -> None:
-    from app.core.database import get_async_session
+    from app.core.database import async_session_factory
     from app.models.action import ActionLog
     from app.models.assistant import Assistant
     from app.models.connector import AssistantConnector
@@ -348,7 +348,7 @@ async def _rollback_action_async(action_log_id: uuid.UUID) -> None:
     from app.connectors.youtube import YouTubeConnector
     from sqlalchemy import select
 
-    async with get_async_session() as session:
+    async with async_session_factory() as session:
         try:
             action_log = await session.get(ActionLog, action_log_id)
             # SR-02: never rollback without external_resource_id
