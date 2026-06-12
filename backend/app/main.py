@@ -7,6 +7,7 @@ from app.api.audit import router as audit_router
 from app.api.auth import router as auth_router
 from app.api.connectors import router as connectors_router
 from app.api.health import router as health_router
+from app.api.marketplace import router as marketplace_router
 from app.api.memories import router as memories_router
 from app.api.stream import router as stream_router
 from app.api.tasks import router as tasks_router
@@ -39,3 +40,4 @@ app.include_router(audit_router, prefix="/api")
 app.include_router(stream_router, prefix="/api")
 app.include_router(memories_router, prefix="/api")
 app.include_router(templates_router, prefix="/api")
+app.include_router(marketplace_router, prefix="/api")

@@ -8,6 +8,7 @@ from app.models.task import TaskRun
 from app.models.action import ActionLog
 from app.models.approval import ApprovalRequest
 from app.models.memory import AssistantMemory
+from app.models.marketplace import MarketplaceTemplate, TemplateReview
 
 __all__ = [
     "TimestampMixin",
@@ -22,4 +23,6 @@ __all__ = [
     "ActionLog",
     "ApprovalRequest",
     "AssistantMemory",
+    "MarketplaceTemplate",
+    "TemplateReview",
 ]

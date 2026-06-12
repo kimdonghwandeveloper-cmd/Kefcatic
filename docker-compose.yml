@@ -2,15 +2,15 @@ services:
   postgres:
     image: postgres:16
     environment:
-      POSTGRES_DB: assistant_platform
-      POSTGRES_USER: dev
-      POSTGRES_PASSWORD: dev
+      POSTGRES_DB: kefcatic
+      POSTGRES_USER: kefcatic
+      POSTGRES_PASSWORD: kefcatic
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U dev -d assistant_platform"]
+      test: ["CMD-SHELL", "pg_isready -U kefcatic -d kefcatic"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -30,13 +30,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     command: uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-    environment: &backend-env
-      DATABASE_URL: postgresql+asyncpg://dev:dev@postgres/assistant_platform
-      REDIS_URL: redis://redis:6379/0
-      SECRET_KEY: dev-secret-key-change-in-production
-      ENCRYPTION_KEY: ""
-      ENVIRONMENT: development
-      CORS_ORIGINS: '["http://localhost:5173", "http://localhost:3000"]'
+    env_file:
+      - ./backend/.env
     depends_on:
       postgres:
         condition: service_healthy
@@ -53,7 +48,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     command: celery -A app.tasks.celery_app worker --loglevel=info
-    environment: *backend-env
+    env_file:
+      - ./backend/.env
     depends_on:
       postgres:
         condition: service_healthy
@@ -68,7 +64,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     command: celery -A app.tasks.celery_app beat --loglevel=info
-    environment: *backend-env
+    env_file:
+      - ./backend/.env
     depends_on:
       redis:
         condition: service_healthy
