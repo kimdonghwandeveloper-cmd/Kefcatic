@@ -9,6 +9,9 @@ const CreateWizard = lazy(() => import("@/pages/CreateWizard"));
 const Approvals = lazy(() => import("@/pages/Approvals"));
 const ActivityLog = lazy(() => import("@/pages/ActivityLog"));
 const Connectors = lazy(() => import("@/pages/Connectors"));
+const AssistantDetail = lazy(() => import("@/pages/AssistantDetail"));
+const Marketplace = lazy(() => import("@/pages/Marketplace"));
+const Settings = lazy(() => import("@/pages/Settings"));
 
 function PageLoader() {
   return (
@@ -31,6 +34,9 @@ export default function App() {
             <Route path="approvals" element={<Approvals />} />
             <Route path="activity" element={<ActivityLog />} />
             <Route path="connectors" element={<Connectors />} />
+            <Route path="assistants/:id" element={<AssistantDetail />} />
+            <Route path="marketplace" element={<Marketplace />} />
+            <Route path="settings" element={<Settings />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

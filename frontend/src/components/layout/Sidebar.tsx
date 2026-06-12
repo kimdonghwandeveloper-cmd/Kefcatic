@@ -72,6 +72,26 @@ const navItems: NavItem[] = [
       </svg>
     ),
   },
+  {
+    to: "/marketplace",
+    label: "마켓플레이스",
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-5 w-5">
+        <path d="M3 5h14M3 10h14M3 15h10" strokeLinecap="round" />
+        <circle cx="16" cy="15" r="2" />
+      </svg>
+    ),
+  },
+  {
+    to: "/settings",
+    label: "설정",
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-5 w-5">
+        <circle cx="10" cy="10" r="3" />
+        <path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.2 4.2l1.4 1.4M14.4 14.4l1.4 1.4M4.2 15.8l1.4-1.4M14.4 5.6l1.4-1.4" strokeLinecap="round" />
+      </svg>
+    ),
+  },
 ];
 
 interface SidebarProps {
