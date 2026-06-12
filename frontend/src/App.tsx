@@ -1,20 +1,40 @@
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { AppLayout } from "@/components/layout/AppLayout";
 
-// Pages (stubs — Phase 1+ will fill these in)
-const Dashboard = () => (
-  <div className="p-8">
-    <h1 className="text-2xl font-semibold text-[#0a0a0a]">대시보드</h1>
-    <p className="mt-2 text-sm text-[#9a9a9a]">Phase 0 — 기반 구조 완성</p>
-  </div>
-);
+const Dashboard = lazy(() => import("@/pages/Dashboard"));
+const CatRoom = lazy(() => import("@/pages/CatRoom"));
+const Assistants = lazy(() => import("@/pages/Assistants"));
+const CreateWizard = lazy(() => import("@/pages/CreateWizard"));
+const Approvals = lazy(() => import("@/pages/Approvals"));
+const ActivityLog = lazy(() => import("@/pages/ActivityLog"));
+const Connectors = lazy(() => import("@/pages/Connectors"));
+
+function PageLoader() {
+  return (
+    <div className="flex h-full items-center justify-center text-sm text-[#9a9a9a]">
+      불러오는 중...
+    </div>
+  );
+}
 
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route element={<AppLayout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="cat-room" element={<CatRoom />} />
+            <Route path="assistants" element={<Assistants />} />
+            <Route path="assistants/new" element={<CreateWizard />} />
+            <Route path="approvals" element={<Approvals />} />
+            <Route path="activity" element={<ActivityLog />} />
+            <Route path="connectors" element={<Connectors />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }
