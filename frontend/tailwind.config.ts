@@ -45,6 +45,16 @@ const config: Config = {
         button: "6px",
         modal: "12px",
       },
+      transitionDuration: {
+        250: "250ms",
+        350: "350ms",
+      },
+      screens: {
+        // Kefcatic breakpoints (frontend_plan.md §3.3)
+        md: "768px",
+        lg: "1024px",
+        xl: "1280px",
+      },
     },
   },
   plugins: [],

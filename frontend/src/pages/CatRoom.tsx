@@ -55,6 +55,41 @@ export default function CatRoom() {
     (p) => p.action?.assistant_name === selected?.name
   ).length;
 
+  // Mobile: card list fallback
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+  if (isMobile) {
+    return (
+      <div className="space-y-4">
+        <h1 className="text-xl font-semibold text-[#0a0a0a]">Cat Room</h1>
+        {assistants.length === 0 ? (
+          <div className="flex flex-col items-center gap-4 py-16">
+            <CatIllustration state="idle" size={64} />
+            <p className="text-sm text-[#9a9a9a]">아직 비서가 없어요.</p>
+            <Button size="sm" onClick={() => navigate("/assistants/new")}>첫 번째 비서 만들기</Button>
+          </div>
+        ) : (
+          assistants.map((assistant) => {
+            const state: CatState = localStates[assistant.id] ?? "idle";
+            return (
+              <div
+                key={assistant.id}
+                className="rounded-card border border-[#e8e8e8] bg-white p-4 flex items-center gap-4"
+                onClick={() => navigate(`/assistants/${assistant.id}`)}
+              >
+                <CatIllustration state={state} size={48} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-[#0a0a0a]">{assistant.name}</p>
+                  <p className="text-xs text-[#9a9a9a] truncate">{getStateText(assistant.role_type, state)}</p>
+                </div>
+                <span className="text-xs text-[#9a9a9a]">→</span>
+              </div>
+            );
+          })
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="flex gap-4 h-[calc(100vh-8rem)]">
       {/* Canvas */}

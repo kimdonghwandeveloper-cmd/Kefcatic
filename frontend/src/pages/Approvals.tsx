@@ -4,6 +4,7 @@ import { approvalsApi, type ApprovalRequest } from "@/api/approvals";
 import { CatIllustration } from "@/components/cat/CatIllustration";
 import { Button } from "@/components/ui/Button";
 import { Divider } from "@/components/ui/Divider";
+import { toast } from "@/components/ui/Toast";
 
 function ApprovalCard({
   item,
@@ -14,7 +15,17 @@ function ApprovalCard({
   onApprove: (id: string, modified?: Record<string, unknown>) => void;
   onReject: (id: string) => void;
 }) {
+  const [dismissing, setDismissing] = useState(false);
   const [editing, setEditing] = useState(false);
+
+  const handleApprove = (id: string, modified?: Record<string, unknown>) => {
+    setDismissing(true);
+    setTimeout(() => onApprove(id, modified), 300);
+  };
+  const handleReject = (id: string) => {
+    setDismissing(true);
+    setTimeout(() => onReject(id), 300);
+  };
   const [editedText, setEditedText] = useState<string>(() => {
     const out = item.action?.output_data;
     return typeof out?.draft === "string" ? out.draft : "";
@@ -31,7 +42,7 @@ function ApprovalCard({
   const relTime = new Date(item.requested_at).toLocaleString("ko-KR");
 
   return (
-    <div className="rounded-card border border-[#e8e8e8] bg-white p-5 space-y-4">
+    <div className={`rounded-card border border-[#e8e8e8] bg-white p-5 space-y-4 overflow-hidden transition-all duration-300 ${dismissing ? "opacity-0 translate-x-4 scale-[0.98] max-h-0 !p-0 !m-0" : "opacity-100"}`}>
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -96,14 +107,14 @@ function ApprovalCard({
         <Button
           size="sm"
           variant="secondary"
-          onClick={() => onReject(item.action_log_id)}
+          onClick={() => handleReject(item.action_log_id)}
         >
           거절
         </Button>
         <Button
           size="sm"
           onClick={() =>
-            onApprove(
+            handleApprove(
               item.action_log_id,
               editing && editedText ? { draft: editedText } : undefined
             )
@@ -128,17 +139,29 @@ export default function Approvals() {
   const approve = useMutation({
     mutationFn: ({ id, modified }: { id: string; modified?: Record<string, unknown> }) =>
       approvalsApi.approve(id, modified),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["approvals"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["approvals"] });
+      toast.show("승인했어요. ✓");
+    },
+    onError: () => toast.error("승인에 실패했어요."),
   });
 
   const reject = useMutation({
     mutationFn: (id: string) => approvalsApi.reject(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["approvals"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["approvals"] });
+      toast.show("거절했어요.");
+    },
+    onError: () => toast.error("거절에 실패했어요."),
   });
 
   const bulkApprove = useMutation({
     mutationFn: () => approvalsApi.bulkApprove(items.map((i) => i.action_log_id)),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["approvals"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["approvals"] });
+      toast.show(`${items.length}개를 모두 승인했어요. ✓`);
+    },
+    onError: () => toast.error("일괄 승인에 실패했어요."),
   });
 
   return (

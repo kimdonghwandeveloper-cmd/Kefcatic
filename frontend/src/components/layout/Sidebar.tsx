@@ -97,13 +97,14 @@ const navItems: NavItem[] = [
 interface SidebarProps {
   pendingCount?: number;
   collapsed?: boolean;
+  badgeShake?: boolean;
 }
 
-export function Sidebar({ pendingCount = 0, collapsed = false }: SidebarProps) {
+export function Sidebar({ pendingCount = 0, collapsed = false, badgeShake = false }: SidebarProps) {
   return (
     <aside
       className={clsx(
-        "flex h-full flex-col border-r border-[#e8e8e8] bg-white transition-all",
+        "flex h-full flex-col border-r border-[#e8e8e8] bg-white transition-all duration-200",
         collapsed ? "w-14" : "w-52"
       )}
     >
@@ -134,7 +135,12 @@ export function Sidebar({ pendingCount = 0, collapsed = false }: SidebarProps) {
             <span className="shrink-0 relative">
               {item.icon}
               {item.to === "/approvals" && pendingCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#0a0a0a] text-[#fafafa] text-[10px] font-medium">
+                <span
+                  className={clsx(
+                    "absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#0a0a0a] text-[#fafafa] text-[10px] font-medium",
+                    badgeShake && "badge-shake"
+                  )}
+                >
                   {pendingCount > 9 ? "9+" : pendingCount}
                 </span>
               )}
