@@ -4,7 +4,6 @@ import { assistantsApi } from "@/api/assistants";
 import { approvalsApi } from "@/api/approvals";
 import { auditApi } from "@/api/audit";
 import { Card } from "@/components/ui/Card";
-import { Divider } from "@/components/ui/Divider";
 
 function SummaryCard({
   label,

@@ -10,7 +10,6 @@ import { CatIllustration } from "@/components/cat/CatIllustration";
 import { Button } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
-import { Divider } from "@/components/ui/Divider";
 import { StatusBadge } from "@/components/ui/Badge";
 
 type Tab = "overview" | "approvals" | "activity" | "settings";

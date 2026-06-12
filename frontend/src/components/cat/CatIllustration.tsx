@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { clsx } from "clsx";
 
 export type CatState =
@@ -13,7 +14,7 @@ export type CatState =
 
 interface CatIllustrationProps {
   state: CatState;
-  size?: 24 | 64 | 160;
+  size?: 24 | 32 | 48 | 64 | 160;
   className?: string;
 }
 
@@ -43,7 +44,7 @@ function CatSVG({ state, size }: { state: CatState; size: number }) {
   };
 
   // Shared body path scaled to viewBox 0 0 100 100
-  const bodies: Record<CatState, JSX.Element> = {
+  const bodies: Record<CatState, ReactElement> = {
     idle: (
       // Curled-up cat, eyes closed
       <>
