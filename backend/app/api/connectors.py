@@ -146,6 +146,29 @@ async def calendar_callback(
     return ConnectorOut(id=str(cred.id), connector_type=cred.connector_type, scopes=cred.scopes)
 
 
+# ── Google Sheets ─────────────────────────────────────────────────────────────
+
+@router.get("/google-sheets/auth-url")
+async def sheets_auth_url(
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> dict:
+    from app.connectors.google_sheets import build_auth_url
+    return {"url": build_auth_url(_save_state(str(current_user.id)))}
+
+
+@router.get("/google-sheets/callback")
+async def sheets_callback(
+    code: str = Query(...),
+    state: str = Query(...),
+    session: AsyncSession = Depends(get_async_session),
+) -> ConnectorOut:
+    from app.connectors.google_sheets import exchange_code
+    user_id = _pop_state(state)
+    token_data = await exchange_code(code)
+    cred = await _store_connector(session, user_id, "google_sheets", token_data)
+    return ConnectorOut(id=str(cred.id), connector_type=cred.connector_type, scopes=cred.scopes)
+
+
 # ── List ──────────────────────────────────────────────────────────────────────
 
 @router.get("", response_model=list[ConnectorOut])
