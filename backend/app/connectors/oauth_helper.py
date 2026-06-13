@@ -200,3 +200,48 @@ async def ensure_fresh_hubspot_token(credentials: dict) -> dict:
         "access_token": refreshed["access_token"],
         "refresh_token": refreshed.get("refresh_token", credentials["refresh_token"]),
     }
+
+
+# ── Discord OAuth2 ────────────────────────────────────────────────────────────
+#
+# For assistant use cases (reading/sending channel messages) Discord requires a
+# *bot* token, which does not expire — so no refresh step is needed. These helpers
+# build the authorize/invite URL and exchange a user-auth code (identify/guilds);
+# the bot token itself is provisioned out-of-band and stored as access_token.
+
+_DISCORD_API = "https://discord.com/api/v10"
+_DISCORD_AUTH_URI = "https://discord.com/oauth2/authorize"
+_DISCORD_TOKEN_URI = "https://discord.com/api/oauth2/token"
+
+
+def build_discord_auth_url(
+    scopes: list[str], state: str, redirect_uri: str, permissions: int | None = None
+) -> str:
+    params = {
+        "client_id": settings.discord_client_id,
+        "redirect_uri": redirect_uri,
+        "response_type": "code",
+        "scope": " ".join(scopes),
+        "state": state,
+    }
+    if permissions is not None:
+        params["permissions"] = str(permissions)
+    return f"{_DISCORD_AUTH_URI}?{urlencode(params)}"
+
+
+async def exchange_discord_code(code: str, redirect_uri: str) -> dict:
+    """Exchange an authorization code for Discord user tokens (identify/guilds)."""
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(
+            _DISCORD_TOKEN_URI,
+            data={
+                "grant_type": "authorization_code",
+                "client_id": settings.discord_client_id,
+                "client_secret": settings.discord_client_secret,
+                "redirect_uri": redirect_uri,
+                "code": code,
+            },
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+        )
+        resp.raise_for_status()
+        return resp.json()

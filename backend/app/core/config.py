@@ -54,6 +54,12 @@ class Settings(BaseSettings):
     hubspot_client_secret: str = ""
     hubspot_redirect_uri: str = "http://localhost:8000/api/connectors/hubspot/callback"
 
+    # Discord OAuth (bot token provisioned out-of-band; stored as the connector token)
+    discord_client_id: str = ""
+    discord_client_secret: str = ""
+    discord_bot_token: str = ""
+    discord_redirect_uri: str = "http://localhost:8000/api/connectors/discord/callback"
+
     # GitHub OAuth
     github_client_id: str = ""
     github_client_secret: str = ""

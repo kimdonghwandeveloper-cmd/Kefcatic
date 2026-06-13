@@ -217,6 +217,29 @@ async def hubspot_callback(
     return ConnectorOut(id=str(cred.id), connector_type=cred.connector_type, scopes=cred.scopes)
 
 
+# ── Discord ───────────────────────────────────────────────────────────────────
+
+@router.get("/discord/auth-url")
+async def discord_auth_url(
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> dict:
+    from app.connectors.discord import build_auth_url
+    return {"url": build_auth_url(_save_state(str(current_user.id)))}
+
+
+@router.get("/discord/callback")
+async def discord_callback(
+    code: str = Query(...),
+    state: str = Query(...),
+    session: AsyncSession = Depends(get_async_session),
+) -> ConnectorOut:
+    from app.connectors.discord import exchange_code
+    user_id = _pop_state(state)
+    token_data = await exchange_code(code)
+    cred = await _store_connector(session, user_id, "discord", token_data)
+    return ConnectorOut(id=str(cred.id), connector_type=cred.connector_type, scopes=cred.scopes)
+
+
 # ── List ──────────────────────────────────────────────────────────────────────
 
 @router.get("", response_model=list[ConnectorOut])

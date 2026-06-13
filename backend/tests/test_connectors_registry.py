@@ -11,6 +11,7 @@ _CONNECTOR_MODULES = {
     "google_sheets": "google_sheets",
     "slack": "slack",
     "hubspot": "hubspot",
+    "discord": "discord",
 }
 
 
