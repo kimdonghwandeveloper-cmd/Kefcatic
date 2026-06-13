@@ -38,6 +38,21 @@ class Settings(BaseSettings):
     google_client_id: str = ""
     google_client_secret: str = ""
     google_redirect_uri: str = "http://localhost:8000/api/auth/google/callback"
+    # Per-connector OAuth redirect URIs (fall back to defaults in each connector)
+    gmail_redirect_uri: str = "http://localhost:8000/api/connectors/gmail/callback"
+    drive_redirect_uri: str = "http://localhost:8000/api/connectors/google-drive/callback"
+    calendar_redirect_uri: str = "http://localhost:8000/api/connectors/google-calendar/callback"
+    sheets_redirect_uri: str = "http://localhost:8000/api/connectors/google-sheets/callback"
+
+    # Slack OAuth
+    slack_client_id: str = ""
+    slack_client_secret: str = ""
+    slack_redirect_uri: str = "http://localhost:8000/api/connectors/slack/callback"
+
+    # HubSpot OAuth
+    hubspot_client_id: str = ""
+    hubspot_client_secret: str = ""
+    hubspot_redirect_uri: str = "http://localhost:8000/api/connectors/hubspot/callback"
 
     # GitHub OAuth
     github_client_id: str = ""
