@@ -194,6 +194,29 @@ async def slack_callback(
     return ConnectorOut(id=str(cred.id), connector_type=cred.connector_type, scopes=cred.scopes)
 
 
+# ── HubSpot ───────────────────────────────────────────────────────────────────
+
+@router.get("/hubspot/auth-url")
+async def hubspot_auth_url(
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> dict:
+    from app.connectors.hubspot import build_auth_url
+    return {"url": build_auth_url(_save_state(str(current_user.id)))}
+
+
+@router.get("/hubspot/callback")
+async def hubspot_callback(
+    code: str = Query(...),
+    state: str = Query(...),
+    session: AsyncSession = Depends(get_async_session),
+) -> ConnectorOut:
+    from app.connectors.hubspot import exchange_code
+    user_id = _pop_state(state)
+    token_data = await exchange_code(code)
+    cred = await _store_connector(session, user_id, "hubspot", token_data)
+    return ConnectorOut(id=str(cred.id), connector_type=cred.connector_type, scopes=cred.scopes)
+
+
 # ── List ──────────────────────────────────────────────────────────────────────
 
 @router.get("", response_model=list[ConnectorOut])

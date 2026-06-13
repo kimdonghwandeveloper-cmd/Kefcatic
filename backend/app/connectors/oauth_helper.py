@@ -130,3 +130,73 @@ async def exchange_slack_code(code: str, redirect_uri: str) -> dict:
         "team_id": (body.get("team") or {}).get("id", ""),
         "bot_user_id": body.get("bot_user_id", ""),
     }
+
+
+# ── HubSpot OAuth2 ────────────────────────────────────────────────────────────
+#
+# HubSpot access tokens expire (~6h) and must be refreshed with the refresh token.
+
+_HUBSPOT_AUTH_URI = "https://app.hubspot.com/oauth/authorize"
+_HUBSPOT_TOKEN_URI = "https://api.hubapi.com/oauth/v1/token"
+
+
+def build_hubspot_auth_url(scopes: list[str], state: str, redirect_uri: str) -> str:
+    params = {
+        "client_id": settings.hubspot_client_id,
+        "redirect_uri": redirect_uri,
+        "scope": " ".join(scopes),
+        "state": state,
+    }
+    return f"{_HUBSPOT_AUTH_URI}?{urlencode(params)}"
+
+
+async def exchange_hubspot_code(code: str, redirect_uri: str) -> dict:
+    """Exchange an authorization code for HubSpot access + refresh tokens."""
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(
+            _HUBSPOT_TOKEN_URI,
+            data={
+                "grant_type": "authorization_code",
+                "client_id": settings.hubspot_client_id,
+                "client_secret": settings.hubspot_client_secret,
+                "redirect_uri": redirect_uri,
+                "code": code,
+            },
+        )
+        resp.raise_for_status()
+        return resp.json()
+
+
+async def refresh_hubspot_token(refresh_token: str) -> dict:
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(
+            _HUBSPOT_TOKEN_URI,
+            data={
+                "grant_type": "refresh_token",
+                "client_id": settings.hubspot_client_id,
+                "client_secret": settings.hubspot_client_secret,
+                "refresh_token": refresh_token,
+            },
+        )
+        resp.raise_for_status()
+        return resp.json()
+
+
+async def ensure_fresh_hubspot_token(credentials: dict) -> dict:
+    """Refresh the HubSpot access token if a probe shows it is invalid/expired.
+
+    credentials must include 'refresh_token'.
+    """
+    async with httpx.AsyncClient() as client:
+        probe = await client.get(
+            f"https://api.hubapi.com/oauth/v1/access-tokens/{credentials.get('access_token', '')}",
+        )
+    if probe.status_code == 200:
+        return credentials
+
+    refreshed = await refresh_hubspot_token(credentials["refresh_token"])
+    return {
+        **credentials,
+        "access_token": refreshed["access_token"],
+        "refresh_token": refreshed.get("refresh_token", credentials["refresh_token"]),
+    }
