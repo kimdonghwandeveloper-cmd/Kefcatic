@@ -182,5 +182,15 @@ class GoogleDriveConnector(BaseConnector):
             created_at="",
         )
 
+    async def delete_item(self, item_id: str) -> bool:
+        """Move a file to the trash (reversible, unlike permanent deletion)."""
+        async with httpx.AsyncClient() as client:
+            resp = await client.patch(
+                f"{_DRIVE_API}/files/{item_id}",
+                headers={**await self._fresh_headers(), "Content-Type": "application/json"},
+                json={"trashed": True},
+            )
+        return resp.status_code == 200
+
     async def search(self, query: str, **kwargs: Any) -> list[ConnectorItem]:
         return await self.list_items(query=query, **kwargs)
