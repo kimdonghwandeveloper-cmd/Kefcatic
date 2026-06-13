@@ -44,7 +44,9 @@ async def _store_connector(
         "access_token": token_data["access_token"],
         "refresh_token": token_data.get("refresh_token", ""),
     }
-    scopes = token_data.get("scope", "").split()
+    # Google delimits scopes with spaces; Slack uses commas.
+    raw_scope = token_data.get("scope", "")
+    scopes = [s for s in raw_scope.replace(",", " ").split() if s]
     svc = ConnectorCredentialService(session)
     return await svc.store_encrypted(
         user_id=uuid.UUID(user_id),
@@ -166,6 +168,29 @@ async def sheets_callback(
     user_id = _pop_state(state)
     token_data = await exchange_code(code)
     cred = await _store_connector(session, user_id, "google_sheets", token_data)
+    return ConnectorOut(id=str(cred.id), connector_type=cred.connector_type, scopes=cred.scopes)
+
+
+# ── Slack ─────────────────────────────────────────────────────────────────────
+
+@router.get("/slack/auth-url")
+async def slack_auth_url(
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> dict:
+    from app.connectors.slack import build_auth_url
+    return {"url": build_auth_url(_save_state(str(current_user.id)))}
+
+
+@router.get("/slack/callback")
+async def slack_callback(
+    code: str = Query(...),
+    state: str = Query(...),
+    session: AsyncSession = Depends(get_async_session),
+) -> ConnectorOut:
+    from app.connectors.slack import exchange_code
+    user_id = _pop_state(state)
+    token_data = await exchange_code(code)
+    cred = await _store_connector(session, user_id, "slack", token_data)
     return ConnectorOut(id=str(cred.id), connector_type=cred.connector_type, scopes=cred.scopes)
 
 
