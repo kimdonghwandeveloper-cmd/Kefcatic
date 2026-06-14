@@ -5,7 +5,7 @@ Credentials dict keys:
   refresh_token — OAuth2 refresh token
 
 Required OAuth scopes:
-  https://www.googleapis.com/auth/drive.readonly
+  https://www.googleapis.com/auth/drive            (read + write: create/trash files)
   https://www.googleapis.com/auth/documents.readonly  (for Docs export)
 """
 from typing import Any
@@ -24,7 +24,7 @@ _DRIVE_API = "https://www.googleapis.com/drive/v3"
 _DOCS_EXPORT = "https://docs.googleapis.com/v1/documents"
 
 _SCOPES = [
-    "https://www.googleapis.com/auth/drive.readonly",
+    "https://www.googleapis.com/auth/drive",
     "https://www.googleapis.com/auth/documents.readonly",
 ]
 
