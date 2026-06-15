@@ -1,1 +1,6 @@
 .venv-test/
+
+# Celery beat runtime state (regenerated at runtime, not source)
+celerybeat-schedule
+celerybeat-schedule.*
+celerybeat.pid
