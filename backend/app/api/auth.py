@@ -81,7 +81,7 @@ async def google_callback(
     result = await session.execute(select(User).where(User.email == email))
     user = result.scalar_one_or_none()
     if user is None:
-        user = User(email=email, name=name, avatar_url=avatar_url)
+        user = User(email=email, display_name=name, avatar_url=avatar_url)
         session.add(user)
         await session.flush()
 
