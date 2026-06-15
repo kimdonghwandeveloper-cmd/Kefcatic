@@ -25,14 +25,25 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 # In-memory state store for CSRF protection (replace with Redis in production)
 _pending_states: set[str] = set()
 
+# Platform-login scopes — identity only. These are distinct from connector
+# scopes (e.g. youtube.force-ssl); login just needs to read the user's profile.
+_LOGIN_SCOPES = [
+    "openid",
+    "https://www.googleapis.com/auth/userinfo.email",
+    "https://www.googleapis.com/auth/userinfo.profile",
+]
+
 
 @router.get("/google")
 async def google_login() -> RedirectResponse:
-    from app.connectors.youtube import build_auth_url
+    from app.connectors.oauth_helper import build_google_auth_url
+    from app.core.config import settings
 
     state = secrets.token_urlsafe(16)
     _pending_states.add(state)
-    return RedirectResponse(build_auth_url(state))
+    return RedirectResponse(
+        build_google_auth_url(_LOGIN_SCOPES, state, settings.google_redirect_uri)
+    )
 
 
 @router.get("/google/callback")
@@ -45,10 +56,11 @@ async def google_callback(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid state")
     _pending_states.discard(state)
 
-    # Exchange code for tokens
-    from app.connectors.youtube import exchange_code
+    # Exchange code for tokens (login redirect URI must match the one above)
+    from app.connectors.oauth_helper import exchange_google_code
+    from app.core.config import settings
 
-    token_data = await exchange_code(code)
+    token_data = await exchange_google_code(code, settings.google_redirect_uri)
     access_token = token_data["access_token"]
     refresh_token = token_data.get("refresh_token", "")
 
