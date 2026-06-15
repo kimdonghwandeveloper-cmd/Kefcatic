@@ -13,12 +13,11 @@ from app.core.database import get_async_session
 from app.core.deps import get_current_user
 from app.core.security import (
     create_access_token,
-    create_refresh_token,
     decrypt_data,
     encrypt_data,
 )
 from app.models.user import OAuthAccount, User
-from app.schemas.auth import TokenOut, UserOut
+from app.schemas.auth import UserOut
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -51,7 +50,7 @@ async def google_callback(
     code: str = Query(...),
     state: str = Query(...),
     session: AsyncSession = Depends(get_async_session),
-) -> TokenOut:
+) -> RedirectResponse:
     if state not in _pending_states:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid state")
     _pending_states.discard(state)
@@ -109,9 +108,12 @@ async def google_callback(
         if refresh_token:
             oauth_acct.refresh_token = encrypt_data(refresh_token)
 
-    return TokenOut(
-        access_token=create_access_token(str(user.id)),
-        refresh_token=create_refresh_token(str(user.id)),
+    # Redirect the browser back to the SPA with the access token so the
+    # frontend can pick it up (see AuthCallback). The refresh token is omitted
+    # from the URL for safety; the SPA can call /api/auth/me with the token.
+    access_token_jwt = create_access_token(str(user.id))
+    return RedirectResponse(
+        f"{settings.frontend_url}/auth/callback?token={access_token_jwt}"
     )
 
 
