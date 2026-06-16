@@ -24,16 +24,16 @@ function MetricCard({
     <button
       onClick={onClick}
       disabled={!onClick}
-      className="flex flex-col gap-1 rounded-card border border-[#E2E1DE] bg-white p-5 text-left shadow-card transition-colors hover:border-[#2D2B29] disabled:cursor-default disabled:hover:border-[#E2E1DE]"
+      className="flex flex-col gap-1 rounded-card border border-[#E2E1DE] bg-white p-6 text-left shadow-card transition-colors hover:border-[#2D2B29] disabled:cursor-default disabled:hover:border-[#E2E1DE]"
     >
-      <span className="text-[11px] font-medium tracking-widest text-[#A8A5A2] uppercase">{label}</span>
-      <div className="flex items-baseline gap-2 mt-1">
-        <span className="text-[28px] font-semibold leading-none text-[#1A1918]">{value}</span>
+      <span className="text-[12px] font-medium tracking-widest text-[#A8A5A2] uppercase">{label}</span>
+      <div className="flex items-baseline gap-2 mt-2">
+        <span className="text-[36px] font-semibold leading-none text-[#1A1918]">{value}</span>
         {warn && value > 0 && (
-          <span className="text-[13px] text-[#C0392B]">주의</span>
+          <span className="text-[14px] text-[#C0392B]">주의</span>
         )}
       </div>
-      {sub && <span className="text-[13px] text-[#A8A5A2] mt-0.5">{sub}</span>}
+      {sub && <span className="text-[14px] text-[#A8A5A2] mt-1">{sub}</span>}
     </button>
   );
 }
@@ -80,25 +80,25 @@ export default function Dashboard() {
   /* ── Empty state ── */
   if (assistants.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 text-center">
-        <IsometricRoom className="w-full max-w-[280px] opacity-80" />
-        <div className="space-y-2">
-          <h2 className="font-heading text-[20px] font-semibold text-[#1A1918]">아직 비서가 없어요</h2>
-          <p className="text-[15px] text-[#6B6966]">
+      <div className="flex flex-col items-center justify-center min-h-[70vh] gap-8 text-center">
+        <IsometricRoom className="w-full max-w-[400px] opacity-85" />
+        <div className="space-y-3">
+          <h2 className="font-heading text-[28px] font-semibold text-[#1A1918]">아직 비서가 없어요</h2>
+          <p className="text-[16px] text-[#6B6966]">
             첫 번째 비서를 만들고 반복 작업을 자동화해보세요.
           </p>
         </div>
-        <Button onClick={() => navigate("/assistants/new")}>
+        <Button size="lg" onClick={() => navigate("/assistants/new")}>
           첫 번째 비서 만들기
         </Button>
-        <div className="flex gap-6 mt-2">
+        <div className="flex gap-8 mt-2">
           {[
             { icon: "✦", text: "유튜브 댓글 관리" },
             { icon: "✦", text: "메일 자동 응답" },
             { icon: "✦", text: "파일 자동 정리" },
           ].map((hint) => (
-            <div key={hint.text} className="flex items-center gap-1.5 text-[13px] text-[#A8A5A2]">
-              <span className="text-[10px]">{hint.icon}</span>
+            <div key={hint.text} className="flex items-center gap-1.5 text-[14px] text-[#A8A5A2]">
+              <span className="text-[11px]">{hint.icon}</span>
               {hint.text}
             </div>
           ))}
@@ -108,7 +108,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {selectedAssistant && (
         <div className="flex items-center gap-2 -mb-2">
           <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#2D2B29]" />
@@ -119,7 +119,7 @@ export default function Dashboard() {
       )}
 
       {/* Metrics */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <MetricCard
           label="오늘 완료"
           value={recentRuns.filter((r) => r.status === "completed").length}

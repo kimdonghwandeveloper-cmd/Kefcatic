@@ -22,13 +22,13 @@ export function TopBar() {
   };
 
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between border-b border-[#E2E1DE] bg-white px-6">
+    <header className="flex h-16 shrink-0 items-center justify-between border-b border-[#E2E1DE] bg-white px-8">
       <div className="flex items-center gap-3">
         {selected ? (
           <>
-            <span className="font-heading text-[15px] font-semibold text-[#1A1918]">{selected.name}</span>
+            <span className="font-heading text-[16px] font-semibold text-[#1A1918]">{selected.name}</span>
             <span className="text-[#E2E1DE]">·</span>
-            <span className="text-[13px] text-[#6B6966]">
+            <span className="text-[14px] text-[#6B6966]">
               {selected.role_type ?? "일반 비서"}
             </span>
             <span className="inline-flex items-center gap-1 rounded-badge bg-[#EFEFED] px-2 py-0.5 text-[11px] font-medium text-[#6B6966]">
@@ -37,7 +37,7 @@ export function TopBar() {
             </span>
           </>
         ) : (
-          <span className="font-heading text-[15px] font-semibold text-[#1A1918]">대화</span>
+          <span className="font-heading text-[16px] font-semibold text-[#1A1918]">대화</span>
         )}
       </div>
 

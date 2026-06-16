@@ -78,16 +78,16 @@ export function Sidebar({ pendingCount = 0, badgeShake = false }: SidebarProps) 
   });
 
   return (
-    <aside className="flex h-full w-[240px] shrink-0 flex-col bg-[#F5F4F2] border-r border-[#E2E1DE]">
+    <aside className="flex h-full w-[260px] shrink-0 flex-col bg-[#F5F4F2] border-r border-[#E2E1DE]">
       {/* Logo */}
-      <div className="flex h-14 items-center px-5 border-b border-[#E2E1DE]">
-        <span className="font-heading text-[15px] font-semibold tracking-tight text-[#1A1918]">
+      <div className="flex h-16 items-center px-6 border-b border-[#E2E1DE]">
+        <span className="font-heading text-[16px] font-semibold tracking-tight text-[#1A1918]">
           Kefcatic
         </span>
       </div>
 
       {/* Primary nav */}
-      <nav className="px-3 pt-3 pb-2 space-y-0.5">
+      <nav className="px-3 pt-4 pb-2 space-y-0.5">
         {navItems.map((item) => (
           <NavLink
             key={item.to}
@@ -95,7 +95,7 @@ export function Sidebar({ pendingCount = 0, badgeShake = false }: SidebarProps) 
             end={item.end}
             className={({ isActive }) =>
               clsx(
-                "flex items-center gap-3 rounded-button px-2.5 py-2 text-[13px] transition-colors duration-fast",
+                "flex items-center gap-3 rounded-button px-3 py-2.5 text-[14px] transition-colors duration-fast",
                 isActive
                   ? "bg-[#EFEFED] text-[#1A1918] font-medium"
                   : "text-[#6B6966] hover:bg-[#EFEFED] hover:text-[#1A1918]"
@@ -107,7 +107,7 @@ export function Sidebar({ pendingCount = 0, badgeShake = false }: SidebarProps) 
               {item.to === "/approvals" && pendingCount > 0 && (
                 <span
                   className={clsx(
-                    "absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#1A1918] text-white text-[9px] font-medium",
+                    "absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#1A1918] text-white text-[9px] font-medium",
                     badgeShake && "badge-shake"
                   )}
                 >
@@ -115,17 +115,17 @@ export function Sidebar({ pendingCount = 0, badgeShake = false }: SidebarProps) 
                 </span>
               )}
             </span>
-            <span>{item.label}</span>
+            <span className="text-[14px]">{item.label}</span>
           </NavLink>
         ))}
       </nav>
 
       {/* Divider */}
-      <div className="mx-3 border-t border-[#E2E1DE] my-2" />
+      <div className="mx-3 border-t border-[#E2E1DE] my-3" />
 
       {/* Assistant list */}
       <div className="flex-1 overflow-y-auto no-scrollbar px-3">
-        <div className="flex items-center justify-between px-2.5 py-1.5 mb-1">
+        <div className="flex items-center justify-between px-3 py-1.5 mb-1">
           <span className="text-[11px] font-medium tracking-widest text-[#A8A5A2] uppercase">
             비서
           </span>
@@ -146,18 +146,18 @@ export function Sidebar({ pendingCount = 0, badgeShake = false }: SidebarProps) 
               key={assistant.id}
               onClick={() => setSelected(selectedId === assistant.id ? null : assistant.id)}
               className={clsx(
-                "w-full flex items-center gap-2.5 rounded-button px-2.5 py-2 text-left transition-colors duration-fast",
+                "w-full flex items-center gap-3 rounded-button px-3 py-2.5 text-left transition-colors duration-fast",
                 selectedId === assistant.id
                   ? "bg-[#EFEFED] text-[#1A1918]"
                   : "text-[#6B6966] hover:bg-[#EFEFED] hover:text-[#1A1918]"
               )}
             >
-              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#E2E1DE] text-[10px] font-semibold text-[#6B6966]">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#E2E1DE] text-[11px] font-semibold text-[#6B6966]">
                 {assistant.name.charAt(0).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-medium truncate">{assistant.name}</p>
-                <p className="text-[11px] text-[#A8A5A2] truncate">{assistant.role_type ?? "일반 비서"}</p>
+                <p className="text-[14px] font-medium truncate">{assistant.name}</p>
+                <p className="text-[12px] text-[#A8A5A2] truncate">{assistant.role_type ?? "일반 비서"}</p>
               </div>
               <StatusDot active={assistant.is_active} />
             </button>
@@ -166,16 +166,16 @@ export function Sidebar({ pendingCount = 0, badgeShake = false }: SidebarProps) 
       </div>
 
       {/* User profile */}
-      <div className="border-t border-[#E2E1DE] px-3 py-3">
-        <div className="flex items-center gap-2.5 px-2.5 py-2">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#2D2B29] text-white text-[11px] font-semibold">
+      <div className="border-t border-[#E2E1DE] px-3 py-4">
+        <div className="flex items-center gap-3 px-3 py-2.5">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#2D2B29] text-white text-[12px] font-semibold">
             {user?.name?.charAt(0) ?? user?.email?.charAt(0) ?? "U"}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-medium text-[#1A1918] truncate">
+            <p className="text-[14px] font-medium text-[#1A1918] truncate">
               {user?.name ?? user?.email ?? "사용자"}
             </p>
-            <p className="text-[11px] text-[#A8A5A2]">Pro 플랜</p>
+            <p className="text-[12px] text-[#A8A5A2]">Pro 플랜</p>
           </div>
         </div>
       </div>

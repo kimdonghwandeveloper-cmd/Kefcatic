@@ -33,9 +33,9 @@ interface ConfigRowProps {
 
 function ConfigRow({ label, value }: ConfigRowProps) {
   return (
-    <div className="flex items-center justify-between py-2 border-b border-[#E2E1DE] last:border-0">
-      <span className="text-[13px] text-[#6B6966]">{label}</span>
-      <span className="text-[13px] font-medium text-[#1A1918]">{value}</span>
+    <div className="flex items-center justify-between py-2.5 border-b border-[#E2E1DE] last:border-0">
+      <span className="text-[14px] text-[#6B6966]">{label}</span>
+      <span className="text-[14px] font-medium text-[#1A1918]">{value}</span>
     </div>
   );
 }
@@ -60,9 +60,9 @@ export function CatRoomPanel() {
 
   if (!selected) {
     return (
-      <aside className="w-[300px] shrink-0 border-l border-[#E2E1DE] bg-white flex flex-col items-center justify-center gap-4 p-6">
-        <IsometricRoom className="w-full max-w-[240px] opacity-60" />
-        <p className="text-[13px] text-[#A8A5A2] text-center">
+      <aside className="w-[320px] shrink-0 border-l border-[#E2E1DE] bg-white flex flex-col items-center justify-center gap-5 p-8">
+        <IsometricRoom className="w-full max-w-[280px] opacity-60" />
+        <p className="text-[14px] text-[#A8A5A2] text-center leading-relaxed">
           왼쪽에서 비서를 선택하면<br />상세 정보를 볼 수 있어요.
         </p>
       </aside>
@@ -70,20 +70,20 @@ export function CatRoomPanel() {
   }
 
   return (
-    <aside className="w-[300px] shrink-0 border-l border-[#E2E1DE] bg-white flex flex-col overflow-y-auto no-scrollbar">
+    <aside className="w-[320px] shrink-0 border-l border-[#E2E1DE] bg-white flex flex-col overflow-y-auto no-scrollbar">
       {/* Illustration */}
-      <div className="bg-[#F5F4F2] p-4 flex items-center justify-center border-b border-[#E2E1DE]">
-        <IsometricRoom className="w-full max-w-[260px]" />
+      <div className="bg-[#F5F4F2] p-5 flex items-center justify-center border-b border-[#E2E1DE]">
+        <IsometricRoom className="w-full max-w-[280px]" />
       </div>
 
       {/* Assistant identity */}
-      <div className="px-5 pt-4 pb-3 border-b border-[#E2E1DE]">
+      <div className="px-6 pt-5 pb-4 border-b border-[#E2E1DE]">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="font-heading text-[16px] font-semibold text-[#1A1918]">{selected.name}</h2>
-            <div className="flex items-center gap-1.5 mt-0.5">
+            <h2 className="font-heading text-[18px] font-semibold text-[#1A1918]">{selected.name}</h2>
+            <div className="flex items-center gap-1.5 mt-1">
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#2D2B29]" />
-              <span className="text-[13px] text-[#6B6966]">
+              <span className="text-[14px] text-[#6B6966]">
                 {selected.is_active ? "활성 중" : "비활성"}
               </span>
             </div>
@@ -101,18 +101,18 @@ export function CatRoomPanel() {
         </div>
 
         {selected.description && (
-          <p className="mt-2 text-[13px] text-[#6B6966] leading-relaxed">{selected.description}</p>
+          <p className="mt-2 text-[14px] text-[#6B6966] leading-relaxed">{selected.description}</p>
         )}
       </div>
 
       {/* Status */}
-      <div className="px-5 py-3 border-b border-[#E2E1DE]">
-        <p className="text-[13px] text-[#6B6966] italic">{CAT_STATE_DESC[catState]}</p>
+      <div className="px-6 py-4 border-b border-[#E2E1DE]">
+        <p className="text-[14px] text-[#6B6966] italic">{CAT_STATE_DESC[catState]}</p>
       </div>
 
       {/* Configuration */}
-      <div className="px-5 py-3 border-b border-[#E2E1DE]">
-        <p className="text-[11px] font-medium tracking-widest text-[#A8A5A2] uppercase mb-2">구성</p>
+      <div className="px-6 py-4 border-b border-[#E2E1DE]">
+        <p className="text-[11px] font-medium tracking-widest text-[#A8A5A2] uppercase mb-3">구성</p>
         <ConfigRow label="역할" value={ROLE_LABELS[selected.role_type ?? ""] ?? "일반 비서"} />
         <ConfigRow label="상태" value={selected.is_active ? "활성" : "비활성"} />
         {pendingForSelected > 0 && (
@@ -121,7 +121,7 @@ export function CatRoomPanel() {
       </div>
 
       {/* Actions */}
-      <div className="px-5 py-4 flex flex-col gap-2 mt-auto">
+      <div className="px-6 py-5 flex flex-col gap-2.5 mt-auto">
         <Button
           size="sm"
           className="w-full"
