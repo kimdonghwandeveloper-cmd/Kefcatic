@@ -5,31 +5,29 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Kefcatic design tokens
-        black: "#0A0A0A",
-        white: "#FAFAFA",
-        gray: {
-          50: "#F5F5F5",
-          100: "#E8E8E8",
-          200: "#D1D1D1",
-          400: "#9A9A9A",
-          600: "#5C5C5C",
-          800: "#2A2A2A",
-          950: "#111111",
-        },
+        bg: "#F5F4F2",
+        surface: "#FFFFFF",
+        border: "#E2E1DE",
+        "text-primary": "#1A1918",
+        "text-secondary": "#6B6966",
+        "text-tertiary": "#A8A5A2",
+        accent: "#2D2B29",
+        hover: "#EFEFED",
+        destructive: "#C0392B",
       },
       fontFamily: {
-        sans: ["Pretendard", "Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+        heading: ["Plus Jakarta Sans", "Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+        sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       fontSize: {
-        display: ["28px", { fontWeight: "700", letterSpacing: "-0.5px" }],
-        title: ["20px", { fontWeight: "600", letterSpacing: "-0.3px" }],
-        body: ["14px", { fontWeight: "400", letterSpacing: "0px" }],
-        caption: ["12px", { fontWeight: "400", letterSpacing: "0.2px" }],
-        label: ["12px", { fontWeight: "500", letterSpacing: "0.4px" }],
+        "h1": ["40px", { lineHeight: "1.2", fontWeight: "700" }],
+        "h2": ["28px", { lineHeight: "1.3", fontWeight: "600" }],
+        "h3": ["20px", { lineHeight: "1.4", fontWeight: "600" }],
+        "body": ["15px", { lineHeight: "1.6", fontWeight: "400" }],
+        "body-sm": ["13px", { lineHeight: "1.5", fontWeight: "400" }],
+        "label": ["11px", { lineHeight: "1.4", fontWeight: "500", letterSpacing: "0.04em" }],
       },
       spacing: {
-        // 4px base unit
         1: "4px",
         2: "8px",
         3: "12px",
@@ -38,19 +36,23 @@ const config: Config = {
         8: "32px",
         12: "48px",
         16: "64px",
+        24: "96px",
       },
       borderRadius: {
-        card: "8px",
-        badge: "4px",
+        card: "10px",
         button: "6px",
+        badge: "999px",
         modal: "12px",
       },
+      boxShadow: {
+        card: "0 1px 3px rgba(0,0,0,0.08)",
+      },
       transitionDuration: {
-        250: "250ms",
-        350: "350ms",
+        fast: "150ms",
+        base: "250ms",
+        slow: "350ms",
       },
       screens: {
-        // Kefcatic breakpoints (frontend_plan.md §3.3)
         md: "768px",
         lg: "1024px",
         xl: "1280px",

@@ -12,12 +12,12 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const STATUS_CLASS: Record<string, string> = {
-  completed: "text-[#0a0a0a] font-medium",
-  failed: "text-[#0a0a0a]",
-  running: "text-[#5c5c5c]",
-  waiting_approval: "text-[#0a0a0a]",
-  pending: "text-[#9a9a9a]",
-  cancelled: "text-[#9a9a9a]",
+  completed: "text-[#1A1918] font-medium",
+  failed: "text-[#C0392B]",
+  running: "text-[#2D2B29] font-medium",
+  waiting_approval: "text-[#1A1918] font-medium",
+  pending: "text-[#A8A5A2]",
+  cancelled: "text-[#A8A5A2]",
 };
 
 function StatusCell({ status }: { status: string }) {
@@ -34,36 +34,36 @@ function TaskRunRow({ run }: { run: TaskRun }) {
 
   return (
     <>
-      <tr className="border-b border-[#e8e8e8] hover:bg-[#f5f5f5] transition-colors">
-        <td className="py-3 px-4 text-xs text-[#9a9a9a] whitespace-nowrap">
+      <tr className="border-b border-[#E2E1DE] hover:bg-[#F5F4F2] transition-colors">
+        <td className="py-3 px-4 text-[11px] text-[#A8A5A2] whitespace-nowrap">
           {run.started_at ? new Date(run.started_at).toLocaleString("ko-KR") : "-"}
         </td>
-        <td className="py-3 px-4 text-sm text-[#0a0a0a]">
+        <td className="py-3 px-4 text-[13px] font-medium text-[#1A1918]">
           {run.assistant_name ?? "비서"}
         </td>
-        <td className="py-3 px-4">
+        <td className="py-3 px-4 text-[13px]">
           <StatusCell status={run.status} />
         </td>
         <td className="py-3 px-4">
           {run.result_summary && (
             <button
               onClick={() => setExpanded((v) => !v)}
-              className="text-xs text-[#5c5c5c] hover:text-[#0a0a0a] transition-colors"
+              className="text-[13px] text-[#6B6966] hover:text-[#1A1918] transition-colors"
             >
-              {expanded ? "접기 ▲" : "판단 근거 ▼"}
+              {expanded ? "접기 ▲" : "근거 ▼"}
             </button>
           )}
         </td>
-        <td className="py-3 px-4 text-xs text-[#9a9a9a]">
+        <td className="py-3 px-4 text-[11px] text-[#A8A5A2]">
           {run.completed_at
             ? new Date(run.completed_at).toLocaleString("ko-KR")
             : "-"}
         </td>
       </tr>
       {expanded && run.result_summary && (
-        <tr className="bg-[#f5f5f5]">
+        <tr className="bg-[#F5F4F2]">
           <td colSpan={5} className="px-4 py-3">
-            <pre className="text-xs text-[#5c5c5c] whitespace-pre-wrap">
+            <pre className="text-[11px] text-[#6B6966] whitespace-pre-wrap">
               {JSON.stringify(run.result_summary, null, 2)}
             </pre>
           </td>
@@ -87,29 +87,29 @@ export default function ActivityLog() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-semibold text-[#0a0a0a]">활동 기록</h1>
+      <h1 className="font-heading text-[20px] font-semibold text-[#1A1918]">기록</h1>
 
-      <div className="rounded-card border border-[#e8e8e8] bg-white overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="rounded-card border border-[#E2E1DE] bg-white overflow-hidden shadow-card">
+        <table className="w-full">
           <thead>
-            <tr className="border-b border-[#e8e8e8] bg-[#f5f5f5]">
-              <th className="py-2.5 px-4 text-left text-xs font-medium text-[#9a9a9a]">시간</th>
-              <th className="py-2.5 px-4 text-left text-xs font-medium text-[#9a9a9a]">비서</th>
-              <th className="py-2.5 px-4 text-left text-xs font-medium text-[#9a9a9a]">상태</th>
-              <th className="py-2.5 px-4 text-left text-xs font-medium text-[#9a9a9a]">판단 근거</th>
-              <th className="py-2.5 px-4 text-left text-xs font-medium text-[#9a9a9a]">완료 시간</th>
+            <tr className="border-b border-[#E2E1DE] bg-[#F5F4F2]">
+              <th className="py-2.5 px-4 text-left text-[11px] font-medium tracking-widest text-[#A8A5A2] uppercase">시간</th>
+              <th className="py-2.5 px-4 text-left text-[11px] font-medium tracking-widest text-[#A8A5A2] uppercase">비서</th>
+              <th className="py-2.5 px-4 text-left text-[11px] font-medium tracking-widest text-[#A8A5A2] uppercase">상태</th>
+              <th className="py-2.5 px-4 text-left text-[11px] font-medium tracking-widest text-[#A8A5A2] uppercase">근거</th>
+              <th className="py-2.5 px-4 text-left text-[11px] font-medium tracking-widest text-[#A8A5A2] uppercase">완료</th>
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan={5} className="py-12 text-center text-sm text-[#9a9a9a]">
+                <td colSpan={5} className="py-12 text-center text-[13px] text-[#A8A5A2]">
                   불러오는 중...
                 </td>
               </tr>
             ) : runs.length === 0 ? (
               <tr>
-                <td colSpan={5} className="py-12 text-center text-sm text-[#9a9a9a]">
+                <td colSpan={5} className="py-12 text-center text-[13px] text-[#A8A5A2]">
                   아직 실행 기록이 없어요.
                 </td>
               </tr>
@@ -122,22 +122,22 @@ export default function ActivityLog() {
 
       {totalPages > 1 && (
         <div className="flex items-center justify-between text-sm">
-          <span className="text-[#9a9a9a] text-xs">총 {total}개</span>
+          <span className="text-[#A8A5A2] text-[13px]">총 {total}개</span>
           <div className="flex gap-1">
             <button
               disabled={page === 1}
               onClick={() => setPage((p) => p - 1)}
-              className="px-3 py-1 rounded-button border border-[#e8e8e8] text-xs hover:bg-[#f5f5f5] disabled:opacity-40"
+              className="px-3 py-1.5 rounded-button border border-[#E2E1DE] text-[13px] hover:bg-[#EFEFED] disabled:opacity-40"
             >
               이전
             </button>
-            <span className="px-3 py-1 text-xs text-[#5c5c5c]">
+            <span className="px-3 py-1.5 text-[13px] text-[#6B6966]">
               {page} / {totalPages}
             </span>
             <button
               disabled={page === totalPages}
               onClick={() => setPage((p) => p + 1)}
-              className="px-3 py-1 rounded-button border border-[#e8e8e8] text-xs hover:bg-[#f5f5f5] disabled:opacity-40"
+              className="px-3 py-1.5 rounded-button border border-[#E2E1DE] text-[13px] hover:bg-[#EFEFED] disabled:opacity-40"
             >
               다음
             </button>
