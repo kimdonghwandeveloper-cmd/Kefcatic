@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 import { clsx } from "clsx";
+import { SleepyCatRive } from "./SleepyCatRive";
 
 export type CatState =
   | "idle"
@@ -237,7 +238,21 @@ function CatSVG({ state, size }: { state: CatState; size: number }) {
 export function CatIllustration({ state, size = 64, className }: CatIllustrationProps) {
   return (
     <div className={clsx(`cat-${state}`, className)}>
-      <CatSVG state={state} size={size} />
+      {state === "idle" ? (
+        <>
+          <SleepyCatRive size={size} />
+          <a
+            href="https://rive.app/@metamom_mama/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block text-center text-[10px] text-[#9a9a9a] leading-none mt-0.5"
+          >
+            Animation by metamom_mama
+          </a>
+        </>
+      ) : (
+        <CatSVG state={state} size={size} />
+      )}
     </div>
   );
 }
