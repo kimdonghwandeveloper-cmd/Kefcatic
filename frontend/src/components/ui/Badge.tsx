@@ -12,31 +12,26 @@ interface StatusBadgeProps {
   className?: string;
 }
 
-const statusConfig: Record<
-  AssistantStatus,
-  { label: string; className: string; icon?: string }
-> = {
+const statusConfig: Record<AssistantStatus, { label: string; className: string }> = {
   active: {
     label: "활성",
-    className: "bg-[#0a0a0a] text-[#fafafa]",
+    className: "bg-[#1A1918] text-white",
   },
   idle: {
     label: "대기 중",
-    className: "bg-[#e8e8e8] text-[#9a9a9a]",
+    className: "bg-[#EFEFED] text-[#6B6966]",
   },
   review: {
     label: "확인 필요",
-    className: "border border-[#0a0a0a] text-[#0a0a0a] bg-transparent",
+    className: "border border-[#2D2B29] text-[#1A1918] bg-transparent",
   },
   error: {
     label: "오류",
-    className: "text-[#0a0a0a]",
-    icon: "⚠",
+    className: "text-[#C0392B]",
   },
   done: {
     label: "완료",
-    className: "text-[#5c5c5c]",
-    icon: "✓",
+    className: "text-[#6B6966]",
   },
 };
 
@@ -44,7 +39,7 @@ export function Badge({ children, className }: BadgeProps) {
   return (
     <span
       className={clsx(
-        "inline-flex items-center gap-1 rounded-badge px-2 py-0.5 text-label font-medium",
+        "inline-flex items-center gap-1 rounded-badge px-2 py-0.5 text-[11px] font-medium tracking-wide",
         className
       )}
     >
@@ -57,8 +52,18 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
   const config = statusConfig[status];
   return (
     <Badge className={clsx(config.className, className)}>
-      {config.icon && <span aria-hidden>{config.icon}</span>}
       {config.label}
     </Badge>
+  );
+}
+
+export function StatusDot({ active }: { active: boolean }) {
+  return (
+    <span
+      className={clsx(
+        "inline-block h-1.5 w-1.5 rounded-full",
+        active ? "bg-[#2D2B29]" : "bg-[#E2E1DE]"
+      )}
+    />
   );
 }

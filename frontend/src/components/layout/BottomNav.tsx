@@ -63,7 +63,7 @@ const items = [
 
 export function BottomNav({ pendingCount, currentPath }: BottomNavProps) {
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-40 flex border-t border-[#e8e8e8] bg-white pb-safe">
+    <nav className="fixed bottom-0 inset-x-0 z-40 flex border-t border-[#E2E1DE] bg-white pb-safe">
       {items.map((item) => {
         const isActive =
           item.to === "/" ? currentPath === "/" : currentPath.startsWith(item.to);
@@ -73,13 +73,13 @@ export function BottomNav({ pendingCount, currentPath }: BottomNavProps) {
             to={item.to}
             className={clsx(
               "flex flex-1 flex-col items-center gap-1 py-2 text-[10px] transition-colors",
-              isActive ? "text-[#0a0a0a] font-medium" : "text-[#9a9a9a]"
+              isActive ? "text-[#1A1918] font-medium" : "text-[#A8A5A2]"
             )}
           >
             <span className="relative">
               {item.icon}
               {item.badge && pendingCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#0a0a0a] text-[#fafafa] text-[9px] font-medium">
+                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#1A1918] text-white text-[9px] font-medium">
                   {pendingCount > 9 ? "9+" : pendingCount}
                 </span>
               )}

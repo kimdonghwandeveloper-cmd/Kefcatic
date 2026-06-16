@@ -12,26 +12,28 @@ interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
 }
 
 const baseInputClass =
-  "w-full rounded-button border border-[#d1d1d1] bg-white px-3 text-sm text-[#0a0a0a] placeholder-[#9a9a9a] " +
-  "transition-colors focus:border-[#0a0a0a] focus:outline-none disabled:bg-[#f5f5f5] disabled:text-[#9a9a9a]";
+  "w-full rounded-button border border-[#E2E1DE] bg-white px-3 text-[15px] text-[#1A1918] " +
+  "placeholder-[#A8A5A2] transition-colors duration-fast " +
+  "focus:border-[#1A1918] focus:outline-none " +
+  "disabled:bg-[#F5F4F2] disabled:text-[#A8A5A2]";
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ label, error, className, id, ...props }, ref) => {
     const inputId = id ?? label?.toLowerCase().replace(/\s+/g, "-");
     return (
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1.5">
         {label && (
-          <label htmlFor={inputId} className="text-label text-[#0a0a0a]">
+          <label htmlFor={inputId} className="text-[13px] font-medium text-[#1A1918]">
             {label}
           </label>
         )}
         <input
           ref={ref}
           id={inputId}
-          className={clsx(baseInputClass, "h-9", error && "border-[#0a0a0a]", className)}
+          className={clsx(baseInputClass, "h-9", error && "border-[#C0392B]", className)}
           {...props}
         />
-        {error && <p className="text-caption text-[#0a0a0a]">{error}</p>}
+        {error && <p className="text-[11px] text-[#C0392B]">{error}</p>}
       </div>
     );
   }
@@ -42,9 +44,9 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ label, error, className, id, ...props }, ref) => {
     const inputId = id ?? label?.toLowerCase().replace(/\s+/g, "-");
     return (
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1.5">
         {label && (
-          <label htmlFor={inputId} className="text-label text-[#0a0a0a]">
+          <label htmlFor={inputId} className="text-[13px] font-medium text-[#1A1918]">
             {label}
           </label>
         )}
@@ -54,12 +56,12 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           className={clsx(
             baseInputClass,
             "min-h-[80px] resize-y py-2",
-            error && "border-[#0a0a0a]",
+            error && "border-[#C0392B]",
             className
           )}
           {...props}
         />
-        {error && <p className="text-caption text-[#0a0a0a]">{error}</p>}
+        {error && <p className="text-[11px] text-[#C0392B]">{error}</p>}
       </div>
     );
   }
