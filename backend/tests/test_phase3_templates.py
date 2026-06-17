@@ -17,9 +17,10 @@ async def user(session: AsyncSession):
 
 
 @pytest.fixture
-def auth_override(user):
-    from app.core.deps import get_current_user
+def auth_override(user, session):
+    from app.core.deps import get_current_user, get_async_session
     app.dependency_overrides[get_current_user] = lambda: user
+    app.dependency_overrides[get_async_session] = lambda: session
     yield
     app.dependency_overrides.clear()
 

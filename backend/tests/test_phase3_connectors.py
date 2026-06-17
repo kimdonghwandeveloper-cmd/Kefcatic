@@ -2,11 +2,21 @@
 
 Uses httpx.MockTransport so no real Google API calls are made.
 """
-import json
 import pytest
 import httpx
 
 from app.connectors.base import ConnectorItem
+
+# httpx.Response created without going through an actual transport has no
+# `.request` attribute, which causes raise_for_status() to raise RuntimeError.
+# Use this helper everywhere instead of constructing Response directly.
+_DUMMY_REQ = httpx.Request("GET", "https://mock.test/")
+
+
+def _mock_resp(status: int, **kwargs) -> httpx.Response:
+    resp = httpx.Response(status, **kwargs)
+    resp.request = _DUMMY_REQ
+    return resp
 
 
 # ── Mock transport helpers ────────────────────────────────────────────────────
@@ -17,12 +27,12 @@ def _make_transport(responses: dict[str, dict]) -> httpx.MockTransport:
         url = str(request.url)
         for key, resp in responses.items():
             if key in url:
-                return httpx.Response(
-                    status_code=resp.get("status_code", 200),
+                return _mock_resp(
+                    resp.get("status_code", 200),
                     json=resp.get("json", {}),
                     text=resp.get("text"),
                 )
-        return httpx.Response(404, json={"error": "not found"})
+        return _mock_resp(404, json={"error": "not found"})
     return httpx.MockTransport(handler)
 
 
@@ -55,17 +65,16 @@ async def test_gmail_list_items(monkeypatch):
 
     async def mock_client_get(url, **kwargs):
         calls.append(url)
-        if "messages?labelIds" in url or "messages?" in url:
-            return httpx.Response(200, json=messages_response)
+        if url.endswith("/messages"):
+            return _mock_resp(200, json=messages_response)
         if "/messages/msg" in url:
-            return httpx.Response(200, json=msg_detail)
-        return httpx.Response(200, json={"access_token": "new_token", "expires_in": 3600})
+            return _mock_resp(200, json=msg_detail)
+        return _mock_resp(200, json={"access_token": "new_token", "expires_in": 3600})
 
-    # Patch ensure_fresh_token to return credentials unchanged
-    monkeypatch.setattr(
-        "app.connectors.gmail.ensure_fresh_token",
-        lambda creds: creds,
-    )
+    async def _noop(creds):
+        return creds
+
+    monkeypatch.setattr("app.connectors.gmail.ensure_fresh_token", _noop)
 
     connector = GmailConnector(
         credentials={"access_token": "tok", "refresh_token": "ref"},
@@ -93,7 +102,10 @@ async def test_gmail_list_items(monkeypatch):
 async def test_gmail_validate_credentials_success(monkeypatch):
     from app.connectors.gmail import GmailConnector
 
-    monkeypatch.setattr("app.connectors.gmail.ensure_fresh_token", lambda c: c)
+    async def _noop(c):
+        return c
+
+    monkeypatch.setattr("app.connectors.gmail.ensure_fresh_token", _noop)
 
     class MockClient:
         async def __aenter__(self):
@@ -101,7 +113,7 @@ async def test_gmail_validate_credentials_success(monkeypatch):
         async def __aexit__(self, *args):
             pass
         async def get(self, url, **kwargs):
-            return httpx.Response(200, json={"messagesTotal": 42})
+            return _mock_resp(200, json={"messagesTotal": 42})
 
     monkeypatch.setattr("httpx.AsyncClient", MockClient)
 
@@ -115,7 +127,10 @@ async def test_gmail_validate_credentials_success(monkeypatch):
 async def test_drive_list_items(monkeypatch):
     from app.connectors.google_drive import GoogleDriveConnector
 
-    monkeypatch.setattr("app.connectors.google_drive.ensure_fresh_token", lambda c: c)
+    async def _noop(c):
+        return c
+
+    monkeypatch.setattr("app.connectors.google_drive.ensure_fresh_token", _noop)
 
     files_response = {
         "files": [
@@ -136,7 +151,7 @@ async def test_drive_list_items(monkeypatch):
         async def __aexit__(self, *args):
             pass
         async def get(self, url, **kwargs):
-            return httpx.Response(200, json=files_response)
+            return _mock_resp(200, json=files_response)
 
     monkeypatch.setattr("httpx.AsyncClient", MockClient)
 
@@ -151,7 +166,10 @@ async def test_drive_list_items(monkeypatch):
 async def test_drive_read_google_doc(monkeypatch):
     from app.connectors.google_drive import GoogleDriveConnector
 
-    monkeypatch.setattr("app.connectors.google_drive.ensure_fresh_token", lambda c: c)
+    async def _noop(c):
+        return c
+
+    monkeypatch.setattr("app.connectors.google_drive.ensure_fresh_token", _noop)
 
     meta = {
         "id": "doc1",
@@ -167,8 +185,8 @@ async def test_drive_read_google_doc(monkeypatch):
             pass
         async def get(self, url, **kwargs):
             if "export" in url:
-                return httpx.Response(200, text="Exported plain text content")
-            return httpx.Response(200, json=meta)
+                return _mock_resp(200, text="Exported plain text content")
+            return _mock_resp(200, json=meta)
 
     monkeypatch.setattr("httpx.AsyncClient", MockClient)
 
@@ -204,7 +222,7 @@ async def test_ensure_fresh_token_already_valid(monkeypatch):
         async def __aexit__(self, *args):
             pass
         async def get(self, url, **kwargs):
-            return httpx.Response(200, json={"expires_in": 3600})
+            return _mock_resp(200, json={"expires_in": 3600})
 
     monkeypatch.setattr("httpx.AsyncClient", MockClient)
 
@@ -227,10 +245,10 @@ async def test_ensure_fresh_token_expired(monkeypatch):
             pass
         async def get(self, url, **kwargs):
             call_count["get"] += 1
-            return httpx.Response(400, json={"error": "invalid_token"})
+            return _mock_resp(400, json={"error": "invalid_token"})
         async def post(self, url, **kwargs):
             call_count["post"] += 1
-            return httpx.Response(200, json={"access_token": "new_token", "expires_in": 3600})
+            return _mock_resp(200, json={"access_token": "new_token", "expires_in": 3600})
 
     monkeypatch.setattr("httpx.AsyncClient", MockClient)
 

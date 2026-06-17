@@ -39,9 +39,11 @@ async def approved_template(session, users):
     return tpl
 
 
-def _auth(user: User):
-    from app.core.deps import get_current_user
+def _auth(user: User, session=None):
+    from app.core.deps import get_current_user, get_async_session
     app.dependency_overrides[get_current_user] = lambda: user
+    if session is not None:
+        app.dependency_overrides[get_async_session] = lambda: session
 
 
 def _clear():
@@ -52,30 +54,45 @@ def _clear():
 
 @pytest.mark.asyncio
 async def test_list_approved_templates(session, approved_template):
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-        resp = await client.get("/api/marketplace/templates")
-    assert resp.status_code == 200
-    assert any(t["name"] == "YouTube Moderator" for t in resp.json())
+    from app.core.deps import get_async_session
+    app.dependency_overrides[get_async_session] = lambda: session
+    try:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            resp = await client.get("/api/marketplace/templates")
+        assert resp.status_code == 200
+        assert any(t["name"] == "YouTube Moderator" for t in resp.json())
+    finally:
+        _clear()
 
 
 @pytest.mark.asyncio
 async def test_list_templates_filter_by_role_type(session, approved_template):
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-        resp = await client.get("/api/marketplace/templates?role_type=youtube_moderator")
-    assert resp.status_code == 200
-    assert len(resp.json()) >= 1
+    from app.core.deps import get_async_session
+    app.dependency_overrides[get_async_session] = lambda: session
+    try:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            resp = await client.get("/api/marketplace/templates?role_type=youtube_moderator")
+        assert resp.status_code == 200
+        assert len(resp.json()) >= 1
 
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-        resp = await client.get("/api/marketplace/templates?role_type=nonexistent")
-    assert resp.json() == []
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            resp = await client.get("/api/marketplace/templates?role_type=nonexistent")
+        assert resp.json() == []
+    finally:
+        _clear()
 
 
 @pytest.mark.asyncio
 async def test_get_template_detail(session, approved_template):
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-        resp = await client.get(f"/api/marketplace/templates/{approved_template.id}")
-    assert resp.status_code == 200
-    assert resp.json()["name"] == "YouTube Moderator"
+    from app.core.deps import get_async_session
+    app.dependency_overrides[get_async_session] = lambda: session
+    try:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            resp = await client.get(f"/api/marketplace/templates/{approved_template.id}")
+        assert resp.status_code == 200
+        assert resp.json()["name"] == "YouTube Moderator"
+    finally:
+        _clear()
 
 
 @pytest.mark.asyncio
@@ -90,16 +107,21 @@ async def test_get_pending_template_returns_404(session, users):
     session.add(pending)
     await session.flush()
 
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-        resp = await client.get(f"/api/marketplace/templates/{pending.id}")
-    assert resp.status_code == 404
+    from app.core.deps import get_async_session
+    app.dependency_overrides[get_async_session] = lambda: session
+    try:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            resp = await client.get(f"/api/marketplace/templates/{pending.id}")
+        assert resp.status_code == 404
+    finally:
+        _clear()
 
 
 # ── Submit & Admin ────────────────────────────────────────────────────────────
 
 @pytest.mark.asyncio
 async def test_submit_template(session, users):
-    _auth(users["author"])
+    _auth(users["author"], session)
     try:
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             resp = await client.post("/api/marketplace/templates", json={
@@ -127,7 +149,7 @@ async def test_admin_approve_template(session, users):
     session.add(pending)
     await session.flush()
 
-    _auth(users["admin"])
+    _auth(users["admin"], session)
     try:
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             resp = await client.post(f"/api/marketplace/admin/templates/{pending.id}/approve", json={})
@@ -149,7 +171,7 @@ async def test_admin_reject_template(session, users):
     session.add(pending)
     await session.flush()
 
-    _auth(users["admin"])
+    _auth(users["admin"], session)
     try:
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             resp = await client.post(f"/api/marketplace/admin/templates/{pending.id}/reject", json={})
@@ -161,7 +183,7 @@ async def test_admin_reject_template(session, users):
 
 @pytest.mark.asyncio
 async def test_non_admin_cannot_approve(session, users, approved_template):
-    _auth(users["buyer"])
+    _auth(users["buyer"], session)
     try:
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             resp = await client.post(
@@ -176,7 +198,7 @@ async def test_non_admin_cannot_approve(session, users, approved_template):
 
 @pytest.mark.asyncio
 async def test_install_sr06_missing_mode(session, users, approved_template):
-    _auth(users["buyer"])
+    _auth(users["buyer"], session)
     try:
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             resp = await client.post(
@@ -195,7 +217,7 @@ async def test_install_sr06_missing_mode(session, users, approved_template):
 
 @pytest.mark.asyncio
 async def test_install_success(session, users, approved_template):
-    _auth(users["buyer"])
+    _auth(users["buyer"], session)
     try:
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             resp = await client.post(
@@ -220,7 +242,7 @@ async def test_install_success(session, users, approved_template):
 
 @pytest.mark.asyncio
 async def test_create_and_list_review(session, users, approved_template):
-    _auth(users["buyer"])
+    _auth(users["buyer"], session)
     try:
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             resp = await client.post(
@@ -239,7 +261,7 @@ async def test_create_and_list_review(session, users, approved_template):
 
 @pytest.mark.asyncio
 async def test_duplicate_review_returns_409(session, users, approved_template):
-    _auth(users["buyer"])
+    _auth(users["buyer"], session)
     try:
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             await client.post(

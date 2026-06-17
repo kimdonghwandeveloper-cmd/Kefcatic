@@ -1,8 +1,10 @@
+from uuid import UUID
+
 from pydantic import BaseModel
 
 
 class TemplateOut(BaseModel):
-    id: str
+    id: UUID
     name: str
     description: str | None
     role_type: str | None

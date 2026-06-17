@@ -96,6 +96,7 @@ async def submit_template(
         status="pending",
     )
     session.add(tpl)
+    await session.flush()
     return tpl
 
 
