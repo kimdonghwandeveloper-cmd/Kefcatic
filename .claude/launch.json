@@ -3,11 +3,10 @@
   "configurations": [
     {
       "name": "kefcatic-frontend",
-      "runtimeExecutable": "/bin/bash",
-      "runtimeArgs": ["/tmp/start-kefcatic-frontend.sh"],
-      "cwd": "/home/kimdonghwan/projects/personal/Kefcatic/.claude/worktrees/jolly-kilby-86c747/frontend",
-      "port": 5173,
-      "autoPort": true
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--", "--port", "5174"],
+      "cwd": ".claude/worktrees/determined-rubin-90e2b2/frontend",
+      "port": 5174
     }
   ]
 }
