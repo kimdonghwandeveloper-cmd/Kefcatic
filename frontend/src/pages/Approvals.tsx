@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { approvalsApi, type ApprovalRequest } from "@/api/approvals";
-import { CatIllustration } from "@/components/cat/CatIllustration";
 import { Button } from "@/components/ui/Button";
 import { Divider } from "@/components/ui/Divider";
 import { toast } from "@/components/ui/Toast";
@@ -42,15 +41,17 @@ function ApprovalCard({
   const relTime = new Date(item.requested_at).toLocaleString("ko-KR");
 
   return (
-    <div className={`rounded-card border border-[#e8e8e8] bg-white p-5 space-y-4 overflow-hidden transition-all duration-300 ${dismissing ? "opacity-0 translate-x-4 scale-[0.98] max-h-0 !p-0 !m-0" : "opacity-100"}`}>
+    <div className={`rounded-card border border-[#E2E1DE] bg-white p-5 space-y-4 overflow-hidden transition-all duration-300 shadow-card ${dismissing ? "opacity-0 translate-x-4 scale-[0.98] max-h-0 !p-0 !m-0" : "opacity-100"}`}>
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <CatIllustration state="waiting_approval" size={24} />
-          <span className="text-sm font-medium text-[#0a0a0a]">{assistantName}</span>
-          <span className="text-xs text-[#9a9a9a]">· {actionLabel}</span>
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#EFEFED] text-[11px] font-semibold text-[#6B6966]">
+            {assistantName.charAt(0)}
+          </div>
+          <span className="text-[13px] font-medium text-[#1A1918]">{assistantName}</span>
+          <span className="text-[13px] text-[#A8A5A2]">· {actionLabel}</span>
         </div>
-        <span className="text-xs text-[#9a9a9a]">{relTime}</span>
+        <span className="text-[11px] text-[#A8A5A2]">{relTime}</span>
       </div>
 
       <Divider />
@@ -58,8 +59,8 @@ function ApprovalCard({
       {/* Original */}
       {originalComment && (
         <div>
-          <p className="text-xs text-[#9a9a9a] mb-1">원본</p>
-          <p className="text-sm text-[#0a0a0a] bg-[#f5f5f5] rounded-button px-3 py-2">
+          <p className="text-[11px] font-medium text-[#A8A5A2] mb-1.5">원본</p>
+          <p className="text-[13px] text-[#1A1918] bg-[#F5F4F2] rounded-button px-3 py-2 leading-relaxed">
             "{originalComment}"
           </p>
         </div>
@@ -68,19 +69,19 @@ function ApprovalCard({
       {/* AI judgement */}
       {aiJudgement && (
         <div>
-          <p className="text-xs text-[#9a9a9a] mb-1">AI 판단</p>
-          <p className="text-sm text-[#5c5c5c]">{aiJudgement}</p>
+          <p className="text-[11px] font-medium text-[#A8A5A2] mb-1.5">AI 판단</p>
+          <p className="text-[13px] text-[#6B6966]">{aiJudgement}</p>
         </div>
       )}
 
       {/* Draft */}
       {draftReply !== null && (
         <div>
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-xs text-[#9a9a9a]">제안 내용</p>
+          <div className="flex items-center justify-between mb-1.5">
+            <p className="text-[11px] font-medium text-[#A8A5A2]">제안 내용</p>
             <button
               onClick={() => setEditing((v) => !v)}
-              className="text-xs text-[#5c5c5c] hover:text-[#0a0a0a] transition-colors"
+              className="text-[13px] text-[#6B6966] hover:text-[#1A1918] transition-colors"
             >
               {editing ? "취소" : "수정하기"}
             </button>
@@ -89,11 +90,11 @@ function ApprovalCard({
             <textarea
               value={editedText}
               onChange={(e) => setEditedText(e.target.value)}
-              className="w-full rounded-button border border-[#0a0a0a] p-2 text-sm resize-none focus:outline-none"
+              className="w-full rounded-button border border-[#1A1918] p-2 text-[13px] resize-none focus:outline-none"
               rows={3}
             />
           ) : (
-            <p className="text-sm text-[#0a0a0a] bg-[#f5f5f5] rounded-button px-3 py-2">
+            <p className="text-[13px] text-[#1A1918] bg-[#F5F4F2] rounded-button px-3 py-2 leading-relaxed">
               {draftReply}
             </p>
           )}
@@ -168,9 +169,9 @@ export default function Approvals() {
     <div className="space-y-6 max-w-2xl">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-[#0a0a0a]">승인 대기</h1>
+          <h1 className="font-heading text-[20px] font-semibold text-[#1A1918]">승인 대기</h1>
           {items.length > 0 && (
-            <p className="text-sm text-[#9a9a9a] mt-0.5">{items.length}개 항목이 확인을 기다리고 있어요.</p>
+            <p className="text-[13px] text-[#6B6966] mt-0.5">{items.length}개 항목이 확인을 기다리고 있어요.</p>
           )}
         </div>
         {items.length > 1 && (
@@ -188,13 +189,16 @@ export default function Approvals() {
       {isLoading ? (
         <div className="space-y-4">
           {[1, 2].map((i) => (
-            <div key={i} className="h-48 rounded-card border border-[#e8e8e8] bg-white animate-pulse" />
+            <div key={i} className="h-48 rounded-card border border-[#E2E1DE] bg-white skeleton" />
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div className="flex flex-col items-center gap-4 py-20">
-          <CatIllustration state="done" size={64} />
-          <p className="text-sm text-[#9a9a9a]">확인할 항목이 없어요. 비서가 잘 하고 있어요.</p>
+        <div className="flex flex-col items-center gap-4 py-20 text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-card bg-[#EFEFED] text-2xl">✓</div>
+          <div className="space-y-1">
+            <p className="text-[15px] font-medium text-[#1A1918]">모두 확인했어요</p>
+            <p className="text-[13px] text-[#6B6966]">비서가 잘 하고 있어요.</p>
+          </div>
         </div>
       ) : (
         <div className="space-y-4">

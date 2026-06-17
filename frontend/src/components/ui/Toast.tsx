@@ -43,14 +43,14 @@ function ToastItem({ item, onDismiss }: { item: Toast; onDismiss: () => void }) 
         flex items-center gap-3 rounded-card border bg-white px-4 py-3 shadow-sm
         transition-all duration-250 ease-in-out
         ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}
-        ${item.type === "error" ? "border-[#0a0a0a]" : "border-[#e8e8e8]"}
+        ${item.type === "error" ? "border-[#C0392B]" : "border-[#E2E1DE]"}
       `}
     >
-      {item.type === "error" && <span className="text-sm">⚠</span>}
-      <span className="text-sm text-[#0a0a0a]">{item.message}</span>
+      {item.type === "error" && <span className="text-[13px] text-[#C0392B]">⚠</span>}
+      <span className="text-[13px] text-[#1A1918]">{item.message}</span>
       <button
         onClick={onDismiss}
-        className="ml-auto text-[#9a9a9a] hover:text-[#0a0a0a] transition-colors text-xs"
+        className="ml-auto text-[#A8A5A2] hover:text-[#1A1918] transition-colors text-[11px]"
       >
         ✕
       </button>

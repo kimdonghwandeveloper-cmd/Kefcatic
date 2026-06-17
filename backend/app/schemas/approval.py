@@ -4,27 +4,28 @@ from uuid import UUID
 from pydantic import BaseModel
 
 
+
 class ActionLogOut(BaseModel):
-    id: str
-    task_run_id: str
+    id: UUID
+    task_run_id: UUID
     action_type: str
     status: str
     input_data: dict | None
     output_data: dict | None
     external_resource_id: str | None
     executed_at: datetime | None
-    approved_by: str | None
+    approved_by: UUID | None
     approved_at: datetime | None
 
     model_config = {"from_attributes": True}
 
 
 class ApprovalRequestOut(BaseModel):
-    id: str
-    action_log_id: str
+    id: UUID
+    action_log_id: UUID
     requested_at: datetime
     status: str
-    reviewed_by: str | None
+    reviewed_by: UUID | None
     reviewed_at: datetime | None
     reviewer_note: str | None
     action_log: ActionLogOut | None = None
@@ -38,4 +39,4 @@ class ApprovalDecision(BaseModel):
 
 
 class BulkApproveRequest(BaseModel):
-    action_log_ids: list[str]
+    action_log_ids: list[UUID]

@@ -4,9 +4,9 @@
     {
       "name": "kefcatic-frontend",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
-      "cwd": "/home/kimdonghwan/projects/personal/Kefcatic/.claude/worktrees/nifty-bartik-91cc7e/frontend",
-      "port": 5173
+      "runtimeArgs": ["run", "dev", "--", "--port", "5174"],
+      "cwd": ".claude/worktrees/determined-rubin-90e2b2/frontend",
+      "port": 5174
     }
   ]
 }

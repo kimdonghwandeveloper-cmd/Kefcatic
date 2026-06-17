@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Sidebar } from "./Sidebar";
 import { BottomNav } from "./BottomNav";
 import { TopBar } from "./TopBar";
+import { CatRoomPanel } from "./CatRoomPanel";
 import { ToastContainer } from "@/components/ui/Toast";
 import { approvalsApi } from "@/api/approvals";
 
@@ -18,7 +19,6 @@ export function AppLayout() {
     refetchInterval: 30_000,
   });
 
-  // Shake badge when pending count increases
   useEffect(() => {
     if (pending.length > prevCount.current) {
       setBadgeShake(true);
@@ -29,15 +29,16 @@ export function AppLayout() {
   }, [pending.length]);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#f5f5f5]">
-      {/* Sidebar — hidden below lg */}
+    <div className="flex h-screen overflow-hidden bg-[#F5F4F2]">
+      {/* Left sidebar — desktop only */}
       <div className="hidden lg:flex">
         <Sidebar pendingCount={pending.length} badgeShake={badgeShake} />
       </div>
 
+      {/* Center column */}
       <div className="flex flex-1 flex-col overflow-hidden min-w-0">
         <TopBar />
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6 pb-20 lg:pb-6">
+        <main className="flex-1 overflow-y-auto p-8 pb-24 lg:pb-8">
           <Outlet />
         </main>
 
@@ -45,6 +46,11 @@ export function AppLayout() {
         <div className="lg:hidden">
           <BottomNav pendingCount={pending.length} currentPath={location.pathname} />
         </div>
+      </div>
+
+      {/* Right panel — desktop only */}
+      <div className="hidden lg:flex">
+        <CatRoomPanel />
       </div>
 
       <ToastContainer />

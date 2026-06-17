@@ -19,8 +19,11 @@ import app.models  # noqa: F401  — registers all models with Base.metadata
 
 target_metadata = Base.metadata
 
-# Override sqlalchemy.url with the value from app settings
-config.set_main_option("sqlalchemy.url", settings.database_url)
+# Use TEST_DATABASE_URL when running tests inside Docker Compose,
+# otherwise fall back to the app settings URL.
+import os as _os
+_migration_url = _os.environ.get("TEST_DATABASE_URL", settings.database_url)
+config.set_main_option("sqlalchemy.url", _migration_url)
 
 
 def run_migrations_offline() -> None:

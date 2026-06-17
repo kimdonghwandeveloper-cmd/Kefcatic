@@ -217,7 +217,7 @@ async def execute_action(
         return ActionResult(action_log_id=action_log.id, status="disabled")
 
     if approval_mode == ApprovalMode.DRAFT_ONLY:
-        action_log.status = "executed"
+        action_log.status = "draft"
         # output_data holds the draft; no external API call
         action_log.output_data = {"draft": input_data}
         return ActionResult(
@@ -227,17 +227,20 @@ async def execute_action(
         )
 
     if approval_mode in (ApprovalMode.REQUIRE_APPROVAL, ApprovalMode.ALWAYS_MANUAL):
-        # SR-04: only one pending approval_request per action_log
+        # SR-04: only one pending approval_request per task_run + action_type
         existing = await session.execute(
-            select(ApprovalRequest).where(
-                ApprovalRequest.action_log_id == action_log.id,
+            select(ApprovalRequest)
+            .join(ActionLog, ApprovalRequest.action_log_id == ActionLog.id)
+            .where(
+                ActionLog.task_run_id == task_run_id,
+                ActionLog.action_type == action_type,
                 ApprovalRequest.status == "pending",
             )
         )
         existing_req = existing.scalar_one_or_none()
         if existing_req:
             return ActionResult(
-                action_log_id=action_log.id,
+                action_log_id=existing_req.action_log_id,
                 status="pending_approval",
                 approval_request_id=existing_req.id,
             )

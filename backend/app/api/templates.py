@@ -132,6 +132,7 @@ async def save_as_template(
         is_template=True,
     )
     session.add(template)
+    await session.flush()
     return template
 
 

@@ -1,9 +1,11 @@
+from uuid import UUID
+
 from pydantic import BaseModel
 
 
 class MemoryOut(BaseModel):
-    id: str
-    assistant_id: str
+    id: UUID
+    assistant_id: UUID
     memory_type: str
     key: str
     value: str
@@ -12,7 +14,7 @@ class MemoryOut(BaseModel):
 
 
 class MemoryCreate(BaseModel):
-    memory_type: str  # preference | instruction | context
+    memory_type: str = "fact"  # preference | instruction | context | fact
     key: str
     value: str
 
